@@ -284,8 +284,11 @@ const bankAccounts = [
     formattedNo: "7271 6136 38",
     name: "a.n. Masjid Jami Sosrohadisewoyo",
     description: "Untuk menampung donasi operasional masjid, meliputi kegiatan peribadahan rutin, bisyaroh ustad, pembelian token listrik, wifi, perbaikan kecil.",
+    impactTitle: "⚡ Dampak Rekening Operasional",
+    impactText: "Menjaga keberlangsungan ibadah harian jamaah, bisyaroh ustadz/marbot, token listrik, wifi dakwah, & perbaikan fisik rutin masjid.",
     accentColor: "#0F766E",
     tagBg: "bg-emerald-50 text-[#0F766E] border-emerald-200",
+    impactBg: "bg-emerald-50/90 border-emerald-200 text-emerald-950",
   },
   {
     id: "bumm",
@@ -297,8 +300,11 @@ const bankAccounts = [
     formattedNo: "7271 6141 22",
     name: "a.n. Masjid Jami Sosrohadisewoyo",
     description: "Untuk menampung dana dari hasil muamalah, seperti keagenan umroh/haji, Tahsin online, sewa ruang, bazaar, dll.",
+    impactTitle: "🤝 Dampak Rekening BUMM (Muamalah)",
+    impactText: "Menggerakkan ekosistem wirausaha umat: keagenan umroh & haji, Kelas Tahsin online, sewa ruang acara, & kemandirian ekonomi.",
     accentColor: "#2563EB",
     tagBg: "bg-blue-50 text-blue-700 border-blue-200",
+    impactBg: "bg-blue-50/90 border-blue-200 text-blue-950",
   },
   {
     id: "investasi",
@@ -310,8 +316,11 @@ const bankAccounts = [
     formattedNo: "7271 6139 83",
     name: "a.n. Masjid Jami Sosrohadisewoyo",
     description: "Untuk menampung dana wakaf, digunakan untuk perbaikan/pembangunan sarana masjid, wakaf Al Quran, ATM beras, dll.",
+    impactTitle: "🌟 Dampak Rekening Investasi & Wakaf",
+    impactText: "Investasi akhirat abadi untuk pembangunan & perbaikan sarana fisik masjid, wakaf Al-Qur'an, mesin ATM beras, & fasilitas publik.",
     accentColor: "#C89B3C",
     tagBg: "bg-amber-50 text-amber-800 border-amber-200",
+    impactBg: "bg-amber-50/90 border-amber-200 text-amber-950",
   },
   {
     id: "event",
@@ -323,8 +332,11 @@ const bankAccounts = [
     formattedNo: "7271 6138 51",
     name: "a.n. Masjid Jami Sosrohadisewoyo",
     description: "Untuk menampung kegiatan event seperti Idul Qurban, santunan anak yatim, dll.",
+    impactTitle: "🎁 Dampak Rekening Event & Santunan",
+    impactText: "Membahagiakan anak yatim & dhuafa melalui santunan akbar, pelaksanaan Idul Qurban, & perayaan hari besar Islam.",
     accentColor: "#EC4899",
     tagBg: "bg-purple-50 text-purple-700 border-purple-200",
+    impactBg: "bg-purple-50/90 border-purple-200 text-purple-950",
   },
 ];
 
@@ -1049,13 +1061,19 @@ export default function App() {
                     />
                   </div>
 
-                  {/* Impact preview */}
-                  <div className="bg-emerald-50/80 border border-emerald-200/60 rounded-lg p-2.5 flex items-center gap-2 text-[11px] text-emerald-900 font-semibold">
-                    <Heart size={14} className="text-[#0F766E] shrink-0" />
-                    <span className="leading-tight">
-                      {impactText(popupCustom ? Number(popupCustom) : popupNominal, "sekali")}
-                    </span>
-                  </div>
+                  {/* Dynamic Impact Box following selected bank account */}
+                  {(() => {
+                    const selBank = bankAccounts.find((b) => b.id === activePopupBank) || bankAccounts[0];
+                    return (
+                      <div className={`border rounded-xl p-2.5 flex flex-col gap-1 text-[11px] font-semibold transition-all duration-300 ${selBank.impactBg}`}>
+                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider">
+                          <Heart size={13} className="shrink-0" style={{ color: selBank.accentColor }} />
+                          <span>{selBank.impactTitle}</span>
+                        </div>
+                        <p className="leading-tight opacity-90">{selBank.impactText}</p>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Bank Account Selector Tabs & Details */}
@@ -2315,8 +2333,7 @@ export default function App() {
         {/* ─────────────── DONASI ─────────────── */}
         <section
           id="donasi-section"
-          className="relative bg-[#064E3B] flex items-center overflow-hidden"
-          style={{ minHeight: "100svh", paddingTop: "72px" }}
+          className="relative bg-[#064E3B] py-16 lg:py-24 overflow-hidden min-h-fit"
         >
           {/* Subtle texture overlay */}
           <div
@@ -2453,23 +2470,21 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Impact box */}
-                <div
-                  className="rounded-xl p-3.5 mb-4 border transition-colors duration-300"
-                  style={{
-                    background: donationType === "bulanan" ? "#ECFDF5" : "#F0F9FF",
-                    borderColor: donationType === "bulanan" ? "#A7F3D0" : "#BAE6FD",
-                  }}
-                >
-                  <div className="text-[10px] mb-1 font-black tracking-wide uppercase flex items-center gap-1.5"
-                    style={{ color: donationType === "bulanan" ? "#059669" : "#0284C7" }}
-                  >
-                    {donationType === "bulanan" ? "🔄 Dampak Bulanan (Amal Jariyah)" : "⚡ Dampak Donasi Sekali"}
-                  </div>
-                  <div className="font-semibold text-sm" style={{ color: donationType === "bulanan" ? "#064E3B" : "#0C4A6E" }}>
-                    {impactText(customNominal ? Number(customNominal) : selectedNominal)}
-                  </div>
-                </div>
+                {/* Dynamic Impact Box following selected bank account */}
+                {(() => {
+                  const selBank = bankAccounts.find((b) => b.id === activeSectionBank) || bankAccounts[0];
+                  return (
+                    <div className={`rounded-2xl p-4 mb-4 border transition-all duration-300 ${selBank.impactBg}`}>
+                      <div className="text-[10px] mb-1 font-black tracking-wide uppercase flex items-center gap-1.5">
+                        <Heart size={14} className="shrink-0" style={{ color: selBank.accentColor }} />
+                        <span>{selBank.impactTitle}</span>
+                      </div>
+                      <div className="font-semibold text-xs sm:text-sm leading-relaxed">
+                        {selBank.impactText}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Bank Account Selection Card inside Form */}
                 <div className="mt-4 pt-4 border-t border-slate-100">
