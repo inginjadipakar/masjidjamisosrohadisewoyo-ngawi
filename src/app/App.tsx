@@ -2333,7 +2333,8 @@ export default function App() {
         {/* ─────────────── DONASI ─────────────── */}
         <section
           id="donasi-section"
-          className="relative bg-[#064E3B] py-16 lg:py-24 overflow-hidden min-h-fit"
+          className="relative bg-[#064E3B] py-20 lg:py-28 min-h-fit"
+          style={{ overflowX: 'clip' }}
         >
           {/* Subtle texture overlay */}
           <div
@@ -2344,8 +2345,8 @@ export default function App() {
             }}
           />
 
-          <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 lg:px-10 py-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 lg:px-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
 
               {/* ── Left ── */}
               <div className="flex flex-col">
