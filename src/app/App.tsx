@@ -273,6 +273,61 @@ const newsItems = [
 
 const nominals = [10000, 25000, 50000, 100000, 250000, 500000];
 
+const bankAccounts = [
+  {
+    id: "operasional",
+    title: "Rekening Operasional",
+    shortTitle: "Operasional",
+    badge: "Operasional & Peribadahan",
+    bank: "Bank Syariah Indonesia (BSI)",
+    accountNo: "7271613638",
+    formattedNo: "7271 6136 38",
+    name: "a.n. Masjid Jami Sosrohadisewoyo",
+    description: "Untuk menampung donasi operasional masjid, meliputi kegiatan peribadahan rutin, bisyaroh ustad, pembelian token listrik, wifi, perbaikan kecil.",
+    accentColor: "#0F766E",
+    tagBg: "bg-emerald-50 text-[#0F766E] border-emerald-200",
+  },
+  {
+    id: "bumm",
+    title: "Rekening BUMM",
+    shortTitle: "BUMM",
+    badge: "Hasil Muamalah & Usaha Umat",
+    bank: "Bank Syariah Indonesia (BSI)",
+    accountNo: "7271614122",
+    formattedNo: "7271 6141 22",
+    name: "a.n. Masjid Jami Sosrohadisewoyo",
+    description: "Untuk menampung dana dari hasil muamalah, seperti keagenan umroh/haji, Tahsin online, sewa ruang, bazaar, dll.",
+    accentColor: "#2563EB",
+    tagBg: "bg-blue-50 text-blue-700 border-blue-200",
+  },
+  {
+    id: "investasi",
+    title: "Rekening Investasi",
+    shortTitle: "Investasi / Wakaf",
+    badge: "Wakaf & Pembangunan Sarana",
+    bank: "Bank Syariah Indonesia (BSI)",
+    accountNo: "7271613983",
+    formattedNo: "7271 6139 83",
+    name: "a.n. Masjid Jami Sosrohadisewoyo",
+    description: "Untuk menampung dana wakaf, digunakan untuk perbaikan/pembangunan sarana masjid, wakaf Al Quran, ATM beras, dll.",
+    accentColor: "#C89B3C",
+    tagBg: "bg-amber-50 text-amber-800 border-amber-200",
+  },
+  {
+    id: "event",
+    title: "Rekening Event",
+    shortTitle: "Event Khusus",
+    badge: "Santunan & Event Umat",
+    bank: "Bank Syariah Indonesia (BSI)",
+    accountNo: "7271613851",
+    formattedNo: "7271 6138 51",
+    name: "a.n. Masjid Jami Sosrohadisewoyo",
+    description: "Untuk menampung kegiatan event seperti Idul Qurban, santunan anak yatim, dll.",
+    accentColor: "#EC4899",
+    tagBg: "bg-purple-50 text-purple-700 border-purple-200",
+  },
+];
+
 /* ── PilarScrollSection — Scroll-driven horizontal (Bolodev technique) ── */
 
 type PillarSlide = (typeof pillarSlides)[number];
@@ -614,8 +669,16 @@ export default function App() {
   const [showDonationPopup, setShowDonationPopup] = useState(false);
   const [popupNominal, setPopupNominal] = useState(50000);
   const [popupCustom, setPopupCustom] = useState("");
-  const [copiedBank, setCopiedBank] = useState(false);
+  const [copiedBankNo, setCopiedBankNo] = useState<string | null>(null);
+  const [activePopupBank, setActivePopupBank] = useState<string>("operasional");
+  const [activeSectionBank, setActiveSectionBank] = useState<string>("operasional");
   const scrollToPillarRef = useRef<((i: number) => void) | null>(null);
+
+  const handleCopyAccount = (no: string) => {
+    navigator.clipboard.writeText(no);
+    setCopiedBankNo(no);
+    setTimeout(() => setCopiedBankNo(null), 2200);
+  };
 
   // Auto trigger popup on page reload/load after 1.5 seconds
   useEffect(() => {
@@ -702,12 +765,6 @@ export default function App() {
       `Assalamualaikum Warahmatullahi Wabarakatuh, saya ingin menanyakan ketersediaan dan booking ruangan${roomStr} di Masjid Jami Sosrohadisewoyo.`
     );
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank", "noopener,noreferrer");
-  };
-
-  const handleCopyAccount = (no: string) => {
-    navigator.clipboard.writeText(no);
-    setCopiedBank(true);
-    setTimeout(() => setCopiedBank(false), 2200);
   };
 
   useEffect(() => {
@@ -1001,31 +1058,70 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Bank Account Info Card */}
-                <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 mb-3.5">
-                  <div className="flex items-center justify-between text-[10px] mb-1">
+                {/* Bank Account Selector Tabs & Details */}
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 mb-3.5">
+                  <div className="flex items-center justify-between text-[10px] mb-2">
                     <span className="text-slate-500 font-bold uppercase tracking-wider">
-                      Transfer Bank Syariah (BSI)
+                      Pilih Rekening Tujuan Transfer (BSI)
                     </span>
                     <span className="text-[#0F766E] font-bold flex items-center gap-1">
                       <ShieldCheck size={12} /> Terverifikasi Amanah
                     </span>
                   </div>
-                  <div className="flex items-center justify-between bg-white rounded-lg px-3 py-1.5 border border-slate-200 shadow-sm">
-                    <div>
-                      <div className="text-[10px] text-slate-400 font-bold tracking-wider">
-                        BSI - 7234 8889 01
-                      </div>
-                      <div className="text-xs font-bold text-slate-800">a.n. Masjid Jami Sosrohadisewoyo</div>
-                    </div>
-                    <button
-                      onClick={() => handleCopyAccount("7234888901")}
-                      className="flex items-center gap-1 bg-[#C89B3C] hover:bg-[#b5882e] text-white px-2.5 py-1 rounded-md text-[11px] font-bold transition-all shadow-sm active:scale-95 cursor-pointer shrink-0"
-                    >
-                      {copiedBank ? <Check size={12} /> : <Copy size={12} />}
-                      <span>{copiedBank ? "Tersalin" : "Salin"}</span>
-                    </button>
+
+                  {/* 4 Tabs */}
+                  <div className="grid grid-cols-4 gap-1 mb-2.5">
+                    {bankAccounts.map((acc) => {
+                      const isSel = activePopupBank === acc.id;
+                      return (
+                        <button
+                          key={acc.id}
+                          onClick={() => setActivePopupBank(acc.id)}
+                          className={`py-1 px-1.5 rounded-lg text-[9px] font-bold transition-all duration-200 cursor-pointer text-center border truncate ${
+                            isSel
+                              ? "bg-[#064E3B] text-white border-[#064E3B] shadow-sm"
+                              : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          {acc.shortTitle}
+                        </button>
+                      );
+                    })}
                   </div>
+
+                  {/* Active Bank Card Detail */}
+                  {(() => {
+                    const currentBank = bankAccounts.find((b) => b.id === activePopupBank) || bankAccounts[0];
+                    const isCopied = copiedBankNo === currentBank.accountNo;
+                    return (
+                      <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-sm">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${currentBank.tagBg}`}>
+                            {currentBank.badge}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-400">BSI</span>
+                        </div>
+                        <div className="flex items-center justify-between my-1">
+                          <div>
+                            <div className="text-sm font-black text-slate-900 font-mono tracking-wide">
+                              {currentBank.formattedNo}
+                            </div>
+                            <div className="text-[11px] font-semibold text-slate-600">{currentBank.name}</div>
+                          </div>
+                          <button
+                            onClick={() => handleCopyAccount(currentBank.accountNo)}
+                            className="flex items-center gap-1 bg-[#C89B3C] hover:bg-[#b5882e] text-white px-2.5 py-1 rounded-md text-[11px] font-bold transition-all shadow-sm active:scale-95 cursor-pointer shrink-0"
+                          >
+                            {isCopied ? <Check size={12} /> : <Copy size={12} />}
+                            <span>{isCopied ? "Tersalin" : "Salin"}</span>
+                          </button>
+                        </div>
+                        <p className="text-[10px] text-slate-500 leading-relaxed font-medium mt-1 pt-1 border-t border-slate-100">
+                          {currentBank.description}
+                        </p>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -2375,25 +2471,132 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* Bank Account Selection Card inside Form */}
+                <div className="mt-4 pt-4 border-t border-slate-100">
+                  <label className="text-slate-500 text-[11px] font-bold uppercase tracking-wider block mb-2">
+                    Pilih Rekening Tujuan Transfer (BSI)
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    {bankAccounts.map((acc) => {
+                      const isSel = activeSectionBank === acc.id;
+                      return (
+                        <button
+                          key={acc.id}
+                          type="button"
+                          onClick={() => setActiveSectionBank(acc.id)}
+                          className={`p-2.5 rounded-xl text-left border transition-all cursor-pointer ${
+                            isSel
+                              ? "bg-slate-900 text-white border-slate-900 shadow-md scale-[1.02]"
+                              : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          <div className="text-[10px] font-black uppercase tracking-wider opacity-75">{acc.shortTitle}</div>
+                          <div className="text-xs font-bold font-mono tracking-tight">{acc.formattedNo}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Account detail info box */}
+                  {(() => {
+                    const acc = bankAccounts.find((a) => a.id === activeSectionBank) || bankAccounts[0];
+                    const isCopied = copiedBankNo === acc.accountNo;
+                    return (
+                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-xs text-slate-700">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-slate-900">{acc.title}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyAccount(acc.accountNo)}
+                            className="inline-flex items-center gap-1 bg-[#C89B3C] text-white px-2.5 py-1 rounded-md text-[11px] font-bold hover:bg-[#b5882e] transition-colors cursor-pointer"
+                          >
+                            {isCopied ? <Check size={12} /> : <Copy size={12} />}
+                            <span>{isCopied ? "Tersalin" : "Salin No. Rek"}</span>
+                          </button>
+                        </div>
+                        <p className="text-[11px] text-slate-600 leading-snug mb-1.5 font-medium">{acc.description}</p>
+                        <div className="text-[11px] text-slate-500 font-mono font-bold">{acc.bank} — {acc.accountNo} ({acc.name})</div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
                 {/* CTA button */}
                 <button
-                  onClick={() => handleWhatsAppDonation(customNominal || selectedNominal)}
-                  className="w-full text-white font-black py-3.5 rounded-full text-sm tracking-widest transition-all duration-300 shadow-lg uppercase hover:scale-[1.02] cursor-pointer"
+                  onClick={() => {
+                    const currentAcc = bankAccounts.find((a) => a.id === activeSectionBank) || bankAccounts[0];
+                    handleWhatsAppDonation(customNominal || selectedNominal, currentAcc.title, currentAcc.accountNo);
+                  }}
+                  className="w-full mt-4 text-white font-black py-3.5 rounded-full text-sm tracking-widest transition-all duration-300 shadow-lg uppercase hover:scale-[1.02] cursor-pointer"
                   style={{
                     background: donationType === "bulanan" ? "#0F766E" : "#C89B3C",
                     boxShadow: donationType === "bulanan" ? "0 4px 20px rgba(15,118,110,0.3)" : "0 4px 20px rgba(200,155,60,0.3)",
                   }}
                 >
-                  {donationType === "bulanan" ? "🔄 Mulai Donasi Bulanan" : "💳 Donasi Sekarang"}
+                  {donationType === "bulanan" ? "🔄 Mulai Donasi Bulanan" : "💳 Donasi Sekarang Via WhatsApp"}
                 </button>
                 <p className="text-center text-[#9CA3AF] text-xs mt-2.5 font-medium">
                   {donationType === "bulanan"
-                    ? "Bisa dibatalkan kapan saja · Transfer Bank, QRIS & e-Wallet"
-                    : "Transfer Bank, QRIS & e-Wallet tersedia"}
+                    ? "Bisa dibatalkan kapan saja · Transfer BSI, QRIS & e-Wallet"
+                    : "Transfer BSI, QRIS & e-Wallet tersedia"}
                 </p>
               </div>
 
             </div>
+
+            {/* ── 4 Bank Accounts Grid Below ── */}
+            <div className="mt-14 border-t border-white/10 pt-10">
+              <div className="text-center max-w-xl mx-auto mb-8">
+                <span className="text-[#C89B3C] text-[11px] font-black tracking-[0.25em] uppercase block mb-1">
+                  Transparansi & Akuntabilitas
+                </span>
+                <h3
+                  className="text-2xl lg:text-3xl font-black text-white"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                >
+                  Daftar Rekening Resmi Masjid Jami Sosrohadisewoyo
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                {bankAccounts.map((acc) => {
+                  const isCopied = copiedBankNo === acc.accountNo;
+                  return (
+                    <div
+                      key={acc.id}
+                      className="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-5 text-white flex flex-col justify-between hover:bg-white/15 transition-all duration-300 shadow-xl"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${acc.tagBg}`}>
+                            {acc.badge}
+                          </span>
+                          <span className="text-xs font-bold text-white/50">BSI</span>
+                        </div>
+                        <h4 className="text-base font-extrabold text-white mb-1.5">{acc.title}</h4>
+                        <p className="text-white/70 text-xs leading-relaxed mb-4 font-medium">{acc.description}</p>
+                      </div>
+
+                      <div className="bg-black/25 rounded-xl p-3 border border-white/10">
+                        <div className="text-[10px] text-white/50 font-bold uppercase tracking-wider">Bank Syariah Indonesia</div>
+                        <div className="text-base font-black font-mono tracking-wide text-[#FCD34D] my-0.5">
+                          {acc.formattedNo}
+                        </div>
+                        <div className="text-[10px] text-white/70 font-semibold mb-2.5">{acc.name}</div>
+                        <button
+                          onClick={() => handleCopyAccount(acc.accountNo)}
+                          className="w-full flex items-center justify-center gap-1.5 bg-[#C89B3C] hover:bg-[#b5882e] text-white py-1.5 rounded-lg text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer"
+                        >
+                          {isCopied ? <Check size={13} /> : <Copy size={13} />}
+                          <span>{isCopied ? "Tersalin!" : "Salin No. Rekening"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
           </div>
         </section>
 
