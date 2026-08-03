@@ -953,17 +953,17 @@ export default function App() {
       {showDonationPopup && (
         <div
           id="popup-backdrop"
-          className="fixed inset-0 z-[100000] bg-black/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+          className="fixed inset-0 z-[100000] bg-black/60 backdrop-blur-md flex items-start justify-center p-3 sm:p-6 overflow-y-auto"
           onClick={(e) => {
             if (e.target === e.currentTarget) closePopup();
           }}
         >
           <div
             id="popup-card"
-            className="relative w-full max-w-[820px] max-h-[92vh] my-auto flex flex-col md:flex-row items-center justify-center pointer-events-auto"
+            className="relative w-full max-w-[820px] my-auto flex flex-col md:flex-row items-stretch justify-center pointer-events-auto"
           >
             {/* 1. CARD IMAGE (Kiri / Belakang) */}
-            <div className="relative w-full md:w-[48%] h-[220px] sm:h-[280px] md:h-[440px] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-xl border border-white/30 shrink-0 bg-slate-900 group">
+            <div className="relative w-full md:w-[48%] h-[220px] sm:h-[280px] md:min-h-[440px] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-xl border border-white/30 shrink-0 bg-slate-900 group">
               <img
                 src="/media/image/baitulmal.png"
                 alt="Masjid Jami Sosrohadisewoyo Donasi"
@@ -994,7 +994,7 @@ export default function App() {
             </div>
 
             {/* 2. CARD POPUP (Kanan / Tumpang Nindih / Clean White) */}
-            <div className="relative w-full md:w-[60%] bg-white text-slate-900 rounded-[24px] md:rounded-[32px] p-5 sm:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.25)] border border-slate-100 -mt-8 md:-mt-0 md:-ml-14 z-10 flex flex-col justify-between max-h-[90vh] overflow-y-auto">
+            <div className="relative w-full md:w-[60%] bg-white text-slate-900 rounded-[24px] md:rounded-[32px] p-5 sm:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.25)] border border-slate-100 -mt-8 md:-mt-0 md:-ml-14 z-10 flex flex-col justify-between overflow-y-auto" style={{ maxHeight: 'min(85svh, 700px)' }}>
               {/* Close Button */}
               <button
                 onClick={closePopup}
