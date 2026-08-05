@@ -121,6 +121,17 @@ const navLinks: NavLinkItem[] = [
       { title: "Ebook" },
     ],
   },
+  {
+    label: "MJS Edukasi",
+    hasDropdown: true,
+    dropdownItems: [
+      { title: "MJS Edukasi — Overview" },
+      { title: "Sains (Fisika & Matematika)" },
+      { title: "Digital & AI" },
+      { title: "Kesehatan (Health Talk)" },
+      { title: "Bisnis & Sales" },
+    ],
+  },
 ];
 
 const tickerItems = [
@@ -733,7 +744,7 @@ export default function App() {
   };
 
   const [activeMobileDropdown, setActiveMobileDropdown] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<"home" | "sewa-ruangan">("home");
+  const [currentView, setCurrentView] = useState<"home" | "sewa-ruangan" | "mjs-edukasi">("home");
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLightNavbar, setIsLightNavbar] = useState(false);
 
@@ -1231,6 +1242,11 @@ export default function App() {
                                 window.scrollTo({ top: 0, behavior: "smooth" });
                                 return;
                               }
+                              if (item.title === "MJS Edukasi — Overview" || item.title === "Sains (Fisika & Matematika)" || item.title === "Digital & AI" || item.title === "Kesehatan (Health Talk)" || item.title === "Bisnis & Sales") {
+                                setCurrentView("mjs-edukasi");
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                                return;
+                              }
                               setCurrentView("home");
                               const el = document.getElementById("pilar-section");
                               el?.scrollIntoView({ behavior: "smooth" });
@@ -1339,6 +1355,11 @@ export default function App() {
                                 window.scrollTo({ top: 0, behavior: "smooth" });
                                 return;
                               }
+                              if (item.title === "MJS Edukasi — Overview" || item.title === "Sains (Fisika & Matematika)" || item.title === "Digital & AI" || item.title === "Kesehatan (Health Talk)" || item.title === "Bisnis & Sales") {
+                                setCurrentView("mjs-edukasi");
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                                return;
+                              }
                               setCurrentView("home");
                               const el = document.getElementById("pilar-section");
                               el?.scrollIntoView({ behavior: "smooth" });
@@ -1373,7 +1394,403 @@ export default function App() {
         </nav>
 
         {/* ─────────────── SEWA RUANGAN PAGE OR HOME ─────────────── */}
-        {currentView === "sewa-ruangan" ? (
+        {currentView === "mjs-edukasi" ? (
+          /* ═══════════════════════════════════════════════════════════════
+             MJS EDUKASI — HALAMAN PENUH
+          ═══════════════════════════════════════════════════════════════ */
+          <div className="min-h-screen bg-[#FAFAFA] text-[#111827] pt-28 pb-20" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+
+            {/* ── Top Nav Bar ── */}
+            <div className="max-w-[1240px] mx-auto px-6 mb-8 flex items-center justify-between">
+              <button
+                onClick={() => {
+                  setCurrentView("home");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="inline-flex items-center gap-2 bg-[#064E3B] text-white hover:bg-[#0F766E] font-bold px-5 py-2.5 rounded-full text-xs sm:text-sm transition-all duration-300 shadow-md cursor-pointer"
+              >
+                <ChevronLeft size={16} />
+                <span>Kembali ke Beranda</span>
+              </button>
+              <div className="text-xs font-bold text-[#0F766E] uppercase tracking-wider hidden sm:block">
+                Masjid Jami Sosrohadisewoyo • MJS Edukasi
+              </div>
+            </div>
+
+            {/* ── Hero Banner ── */}
+            <div className="max-w-[1240px] mx-auto px-6 mb-14">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl min-h-[320px] sm:min-h-[380px] flex items-end" style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 40%, #0f4c75 100%)" }}>
+                {/* Geometric decorative dots */}
+                <div className="absolute inset-0 pointer-events-none opacity-10" style={{ backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+                {/* Glowing orbs */}
+                <div className="absolute top-8 right-12 w-64 h-64 rounded-full blur-3xl opacity-20 pointer-events-none" style={{ background: "radial-gradient(circle, #38bdf8, #0ea5e9)" }} />
+                <div className="absolute bottom-0 left-0 w-80 h-40 rounded-full blur-3xl opacity-15 pointer-events-none" style={{ background: "radial-gradient(circle, #6366f1, #818cf8)" }} />
+
+                <div className="relative z-10 p-8 sm:p-12 w-full">
+                  <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 px-3.5 py-1 rounded-full text-xs font-bold text-[#7dd3fc] uppercase tracking-widest mb-5">
+                    <Sparkles size={13} className="animate-pulse" />
+                    <span>BUMM • Badan Usaha Milik Masjid</span>
+                  </div>
+                  <h1
+                    className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-4 max-w-2xl"
+                    style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                  >
+                    MJS{" "}
+                    <span className="italic" style={{ color: "#7dd3fc" }}>Edukasi</span>
+                  </h1>
+                  <p className="text-white/75 text-sm sm:text-base leading-relaxed mb-7 max-w-xl font-medium">
+                    Ilmu untuk Peradaban. Program edukasi lintas bidang dari Masjid Jami Sosrohadisewoyo — memberdayakan umat lewat pengetahuan Sains, Digital, Kesehatan, dan Bisnis.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm font-bold">
+                    {[
+                      { icon: "🔬", label: "Sains & Matematika" },
+                      { icon: "💻", label: "Digital & AI" },
+                      { icon: "🩺", label: "Health Talk" },
+                      { icon: "📈", label: "Bisnis & Sales" },
+                    ].map((b) => (
+                      <div key={b.label} className="bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-xl text-white">
+                        {b.icon} {b.label}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Visi Section ── */}
+            <div className="max-w-[1240px] mx-auto px-6 mb-16">
+              <div className="bg-white rounded-3xl p-8 sm:p-10 shadow-xl border border-slate-200/80">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+                  <div>
+                    <span className="text-[#0F766E] text-xs font-bold uppercase tracking-widest block mb-3">Visi & Misi</span>
+                    <h2
+                      className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight mb-5"
+                      style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                    >
+                      Masjid sebagai{" "}
+                      <span className="text-[#0F766E] italic">Pusat Ilmu</span>
+                    </h2>
+                    <p className="text-slate-600 text-sm sm:text-base leading-relaxed mb-4">
+                      MJS Edukasi lahir dari visi Masjid Jami Sosrohadisewoyo sebagai <strong>Masjid Peradaban</strong> — bukan sekadar tempat ibadah, tetapi pusat transformasi umat melalui ilmu pengetahuan.
+                    </p>
+                    <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
+                      Melalui unit usaha BUMM, kami menghadirkan program edukasi berkualitas yang terjangkau, berbasis nilai-nilai Islam, dan berdampak nyata bagi masyarakat Ngawi dan sekitarnya.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    {[
+                      { icon: "🕌", val: "1", label: "Pusat Edukasi Masjid", color: "#064E3B" },
+                      { icon: "👨‍🎓", val: "4", label: "Divisi Program", color: "#0F766E" },
+                      { icon: "📚", val: "12+", label: "Topik Kajian", color: "#C89B3C" },
+                      { icon: "🌟", val: "2026", label: "Tahun Berdiri", color: "#1e3a5f" },
+                    ].map((s) => (
+                      <div key={s.label} className="bg-slate-50 rounded-2xl p-5 border border-slate-100 text-center">
+                        <div className="text-3xl mb-2">{s.icon}</div>
+                        <div className="text-2xl font-black mb-1" style={{ color: s.color }}>{s.val}</div>
+                        <div className="text-xs text-slate-500 font-semibold">{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── 4 Divisi Edukasi ── */}
+            <div className="max-w-[1240px] mx-auto px-6 mb-16">
+              <div className="text-center max-w-2xl mx-auto mb-12">
+                <span className="text-[#0F766E] text-xs font-bold uppercase tracking-widest block mb-2">Program Unggulan</span>
+                <h2
+                  className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight mb-3"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                >
+                  4 Divisi MJS Edukasi
+                </h2>
+                <p className="text-slate-500 text-sm font-medium">
+                  Setiap divisi dirancang untuk memberdayakan umat di bidang yang relevan dengan kebutuhan zaman.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {[
+                  {
+                    id: "sains",
+                    icon: "🔬",
+                    title: "MJS Edukasi Sains",
+                    subtitle: "Fisika & Matematika",
+                    color: "#0f4c75",
+                    colorLight: "#bae6fd",
+                    bgGrad: "linear-gradient(135deg, #0f172a, #1e3a5f)",
+                    tag: "Sains",
+                    tagBg: "bg-sky-50 text-sky-700 border-sky-200",
+                    desc: "Program belajar Fisika dan Matematika dengan pendekatan kontekstual dan Islami. Cocok untuk pelajar, mahasiswa, dan siapapun yang ingin memperkuat pondasi sains.",
+                    programs: ["Bimbel Fisika SMP/SMA", "Kelas Matematika Dasar & Lanjut", "Try Out & Pembahasan Soal", "Olimpiade Sains Persiapan"],
+                    cta: "Daftar Kelas Sains",
+                  },
+                  {
+                    id: "digital",
+                    icon: "💻",
+                    title: "MJS Edukasi Digital",
+                    subtitle: "Techno & Artificial Intelligence",
+                    color: "#6366f1",
+                    colorLight: "#c7d2fe",
+                    bgGrad: "linear-gradient(135deg, #1e1b4b, #312e81)",
+                    tag: "Digital",
+                    tagBg: "bg-indigo-50 text-indigo-700 border-indigo-200",
+                    desc: "Kelas literasi digital, pemrograman dasar, dan pengenalan AI/teknologi masa kini. Mempersiapkan generasi Muslim yang melek teknologi dan mampu bersaing di era digital.",
+                    programs: ["Pengenalan AI & ChatGPT", "Kelas Coding Pemula", "Desain Grafis & Canva", "Media Sosial untuk Dakwah"],
+                    cta: "Daftar Kelas Digital",
+                  },
+                  {
+                    id: "kesehatan",
+                    icon: "🩺",
+                    title: "MJS Edukasi Kesehatan",
+                    subtitle: "Health Talk Series",
+                    color: "#0F766E",
+                    colorLight: "#a7f3d0",
+                    bgGrad: "linear-gradient(135deg, #022c22, #064E3B)",
+                    tag: "Kesehatan",
+                    tagBg: "bg-emerald-50 text-emerald-700 border-emerald-200",
+                    desc: "Seminar dan talkshow kesehatan rutin menghadirkan narasumber dokter dan tenaga medis. Membahas kesehatan fisik, mental, keluarga, dan gizi dari perspektif Islam.",
+                    programs: ["Health Talk Bulanan", "Pemeriksaan Kesehatan Gratis", "Kelas Parenting & Gizi Anak", "Kesehatan Mental & Jiwa"],
+                    cta: "Ikut Health Talk",
+                  },
+                  {
+                    id: "bisnis",
+                    icon: "📈",
+                    title: "MJS Edukasi Bisnis",
+                    subtitle: "Entrepreneurship & Sales",
+                    color: "#C89B3C",
+                    colorLight: "#fde68a",
+                    bgGrad: "linear-gradient(135deg, #451a03, #78350f)",
+                    tag: "Bisnis",
+                    tagBg: "bg-amber-50 text-amber-700 border-amber-200",
+                    desc: "Pelatihan wirausaha, strategi penjualan, dan pengembangan UMKM berbasis halal. Mendorong kemandirian ekonomi umat dengan prinsip muamalah yang benar.",
+                    programs: ["Kelas Sales & Negosiasi", "Workshop UMKM Halal", "Digital Marketing Dasar", "Manajemen Keuangan Syariah"],
+                    cta: "Daftar Pelatihan Bisnis",
+                  },
+                ].map((div) => (
+                  <div
+                    key={div.id}
+                    className="group bg-white rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 hover:shadow-2xl transition-all duration-400 flex flex-col"
+                  >
+                    {/* Card Header */}
+                    <div
+                      className="relative h-36 flex items-end p-6 overflow-hidden"
+                      style={{ background: div.bgGrad }}
+                    >
+                      {/* Subtle dot pattern */}
+                      <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
+                      <div className="text-5xl relative z-10 mr-4 group-hover:scale-110 transition-transform duration-300">{div.icon}</div>
+                      <div className="relative z-10">
+                        <span className="text-[10px] font-bold uppercase tracking-widest block mb-0.5" style={{ color: div.colorLight }}>{div.tag}</span>
+                        <h3 className="text-white font-black text-xl leading-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>{div.title}</h3>
+                        <p className="text-white/60 text-xs font-medium">{div.subtitle}</p>
+                      </div>
+                    </div>
+
+                    {/* Card Body */}
+                    <div className="p-6 flex flex-col flex-1">
+                      <p className="text-slate-600 text-sm leading-relaxed mb-5 font-medium">{div.desc}</p>
+
+                      {/* Program list */}
+                      <div className="space-y-2 mb-6 flex-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Program Tersedia:</span>
+                        {div.programs.map((p) => (
+                          <div key={p} className="flex items-center gap-2.5 text-xs text-slate-700 font-medium">
+                            <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: div.color }} />
+                            <span>{p}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* CTA */}
+                      <button
+                        onClick={() => {
+                          const phone = "6287894416915";
+                          const msg = encodeURIComponent(`Assalamualaikum Warahmatullahi Wabarakatuh, saya ingin mendaftar program ${div.title} — ${div.subtitle} di MJS Edukasi, Masjid Jami Sosrohadisewoyo.`);
+                          window.open(`https://wa.me/${phone}?text=${msg}`, "_blank", "noopener,noreferrer");
+                        }}
+                        className="w-full font-bold py-3 rounded-full text-xs uppercase tracking-widest shadow-md transition-all cursor-pointer text-white hover:scale-[1.02] hover:opacity-90"
+                        style={{ background: div.color }}
+                      >
+                        {div.cta}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Keunggulan MJS Edukasi ── */}
+            <div className="max-w-[1240px] mx-auto px-6 mb-16">
+              <div className="bg-gradient-to-br from-[#0f172a] via-[#1e3a5f] to-[#0f4c75] rounded-3xl p-8 sm:p-12 text-white shadow-2xl relative overflow-hidden">
+                <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+                <div className="relative z-10">
+                  <div className="text-center mb-10">
+                    <span className="text-[#7dd3fc] text-xs font-bold uppercase tracking-widest block mb-2">Mengapa Memilih MJS Edukasi?</span>
+                    <h2
+                      className="text-3xl sm:text-4xl font-black text-white leading-tight"
+                      style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                    >
+                      Belajar Bermakna,
+                      <span className="italic text-[#7dd3fc]"> Berdampak Nyata</span>
+                    </h2>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[
+                      { icon: "🕌", title: "Berbasis Masjid", desc: "Dikelola langsung oleh takmir masjid dengan nilai-nilai Islam sebagai fondasi setiap program." },
+                      { icon: "💰", title: "Biaya Terjangkau", desc: "Harga program jauh di bawah pasar, bahkan tersedia beasiswa bagi yang membutuhkan." },
+                      { icon: "👨‍🏫", title: "Pengajar Berpengalaman", desc: "Narasumber dan pengajar adalah praktisi, akademisi, dan profesional di bidangnya." },
+                      { icon: "🤝", title: "Komunitas Supportif", desc: "Bergabung dengan komunitas belajar yang saling mendukung dan berkomitmen pada kebaikan." },
+                      { icon: "📜", title: "Sertifikat Resmi", desc: "Setiap peserta mendapatkan sertifikat kelulusan yang dapat digunakan untuk keperluan karir." },
+                      { icon: "🌱", title: "Dampak Sosial", desc: "Sebagian pendapatan program digunakan untuk mendanai program sosial masjid (ATM Beras, Santunan, dll)." },
+                    ].map((feat) => (
+                      <div key={feat.title} className="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-5 hover:bg-white/15 transition-all duration-300">
+                        <div className="text-3xl mb-3">{feat.icon}</div>
+                        <h4 className="font-bold text-white text-sm mb-1.5">{feat.title}</h4>
+                        <p className="text-white/65 text-xs leading-relaxed font-medium">{feat.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Cara Bergabung ── */}
+            <div className="max-w-[1240px] mx-auto px-6 mb-16">
+              <div className="text-center max-w-xl mx-auto mb-10">
+                <h3
+                  className="text-2xl sm:text-3xl font-black text-slate-900 mb-2"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                >
+                  Cara Bergabung
+                </h3>
+                <p className="text-slate-500 text-xs sm:text-sm font-medium">Proses pendaftaran yang mudah dan cepat</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                  { step: "1", icon: "🔍", title: "Pilih Program", desc: "Tentukan divisi dan program yang sesuai dengan kebutuhan dan minat Anda." },
+                  { step: "2", icon: "📱", title: "Hubungi via WhatsApp", desc: "Chat admin MJS Edukasi untuk informasi jadwal, biaya, dan ketersediaan kelas." },
+                  { step: "3", icon: "📝", title: "Daftar & Bayar", desc: "Isi formulir pendaftaran dan lakukan pembayaran sesuai ketentuan program." },
+                  { step: "4", icon: "🎓", title: "Mulai Belajar", desc: "Hadiri kelas, dapatkan ilmu bermanfaat, dan raih sertifikat kelulusan." },
+                ].map((s) => (
+                  <div key={s.step} className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-md relative group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div className="absolute -top-4 -left-2 w-9 h-9 rounded-full bg-[#064E3B] text-white font-black text-sm flex items-center justify-center shadow-lg">{s.step}</div>
+                    <div className="text-3xl mb-3 mt-2">{s.icon}</div>
+                    <h4 className="font-bold text-slate-900 text-base mb-1.5">{s.title}</h4>
+                    <p className="text-xs text-slate-500 font-medium leading-relaxed">{s.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Jadwal & Info ── */}
+            <div className="max-w-[1240px] mx-auto px-6 mb-16">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Jadwal Upcoming */}
+                <div className="bg-white rounded-3xl p-7 shadow-xl border border-slate-200/80">
+                  <h3
+                    className="text-xl font-black text-slate-900 mb-5"
+                    style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                  >
+                    📅 Jadwal Terdekat
+                  </h3>
+                  <div className="space-y-3">
+                    {[
+                      { date: "Agustus 2026", title: "Health Talk: Kesehatan Keluarga Muslim", tag: "Kesehatan", color: "#0F766E", tagBg: "bg-emerald-50 text-emerald-700" },
+                      { date: "September 2026", title: "Workshop: Pengenalan AI untuk Pemula", tag: "Digital", color: "#6366f1", tagBg: "bg-indigo-50 text-indigo-700" },
+                      { date: "September 2026", title: "Kelas Matematika & Fisika Batch Baru", tag: "Sains", color: "#0f4c75", tagBg: "bg-sky-50 text-sky-700" },
+                      { date: "Oktober 2026", title: "Pelatihan Wirausaha & Sales Syariah", tag: "Bisnis", color: "#C89B3C", tagBg: "bg-amber-50 text-amber-700" },
+                    ].map((ev, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-all">
+                        <div className="w-1 self-stretch rounded-full shrink-0" style={{ background: ev.color }} />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{ev.date}</div>
+                          <div className="text-sm font-bold text-slate-800 leading-snug truncate">{ev.title}</div>
+                        </div>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${ev.tagBg}`} style={{ borderColor: ev.color + "33" }}>{ev.tag}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Info Box */}
+                <div className="bg-gradient-to-br from-[#064E3B] to-[#0F766E] rounded-3xl p-7 shadow-xl text-white flex flex-col justify-between">
+                  <div>
+                    <div className="inline-flex items-center gap-2 bg-white/15 border border-white/20 px-3 py-1 rounded-full text-[10px] font-bold text-[#a7f3d0] uppercase tracking-widest mb-4">
+                      <Sparkles size={11} className="animate-pulse" />
+                      Info Penting
+                    </div>
+                    <h3
+                      className="text-2xl font-black text-white leading-tight mb-4"
+                      style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                    >
+                      Daftar Sekarang,
+                      <br />
+                      <span className="italic text-[#a7f3d0]">Sebelum Kursi Penuh!</span>
+                    </h3>
+                    <ul className="space-y-3 text-white/80 text-sm font-medium">
+                      {[
+                        "Kelas terbatas, hanya untuk 20-30 peserta per batch",
+                        "Tersedia beasiswa untuk yang membutuhkan",
+                        "Dapat diikuti secara online maupun offline",
+                        "Sertifikat resmi dari MJS Edukasi",
+                        "Sebagian hasil program disedekahkan",
+                      ].map((info) => (
+                        <li key={info} className="flex items-start gap-2.5">
+                          <Check size={15} className="text-[#6ee7b7] shrink-0 mt-0.5" />
+                          <span>{info}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const phone = "6287894416915";
+                      const msg = encodeURIComponent("Assalamualaikum Warahmatullahi Wabarakatuh, saya ingin mengetahui informasi lebih lanjut tentang program MJS Edukasi di Masjid Jami Sosrohadisewoyo.");
+                      window.open(`https://wa.me/${phone}?text=${msg}`, "_blank", "noopener,noreferrer");
+                    }}
+                    className="mt-7 w-full bg-[#C89B3C] hover:bg-[#b5882e] text-white font-extrabold py-3.5 rounded-full text-xs uppercase tracking-widest shadow-xl hover:scale-105 transition-all cursor-pointer"
+                  >
+                    Tanya & Daftar via WhatsApp
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Final CTA ── */}
+            <div className="max-w-[1240px] mx-auto px-6">
+              <div className="relative bg-gradient-to-br from-[#0f172a] via-[#1e3a5f] to-[#312e81] text-white rounded-3xl p-8 sm:p-12 text-center shadow-2xl overflow-hidden">
+                <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+                <div className="relative z-10">
+                  <div className="text-5xl mb-4">🎓</div>
+                  <h3
+                    className="text-3xl sm:text-4xl font-black mb-3 text-white"
+                    style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                  >
+                    Ilmu adalah Investasi
+                    <br />
+                    <span className="italic text-[#7dd3fc]">Terbaik untuk Akhirat</span>
+                  </h3>
+                  <p className="text-white/70 text-sm max-w-xl mx-auto mb-8 font-medium leading-relaxed">
+                    "Barangsiapa yang menempuh jalan untuk mencari ilmu, Allah akan mudahkan baginya jalan menuju Surga." — HR. Muslim
+                  </p>
+                  <button
+                    onClick={() => {
+                      const phone = "6287894416915";
+                      const msg = encodeURIComponent("Assalamualaikum Warahmatullahi Wabarakatuh, saya tertarik bergabung dengan MJS Edukasi. Mohon informasi program yang tersedia.");
+                      window.open(`https://wa.me/${phone}?text=${msg}`, "_blank", "noopener,noreferrer");
+                    }}
+                    className="bg-[#C89B3C] hover:bg-[#b5882e] text-white font-extrabold px-9 py-4 rounded-full text-xs sm:text-sm uppercase tracking-widest shadow-xl hover:scale-105 transition-all cursor-pointer inline-flex items-center gap-3"
+                  >
+                    Daftar MJS Edukasi Sekarang
+                    <ArrowRight size={17} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : currentView === "sewa-ruangan" ? (
           <div className="min-h-screen bg-[#FAFAFA] text-[#111827] pt-28 pb-20 font-sans">
             {/* Top Bar Navigation */}
             <div className="max-w-[1240px] mx-auto px-6 mb-8 flex items-center justify-between">
@@ -2840,11 +3257,18 @@ export default function App() {
                 <h4 className="text-white font-bold mb-5 text-[11px] tracking-[0.2em] uppercase">
                   Program
                 </h4>
-                {["Baitullah", "Baitul Mal", "Baitul Muamalah", "Kajian Rutin", "Kelas Tahsin"].map(
+                {["Baitullah", "Baitul Mal", "Baitul Muamalah", "Kajian Rutin", "Kelas Tahsin", "MJS Edukasi"].map(
                   (l) => (
                     <div key={l} className="mb-3">
                       <a
                         href="#"
+                        onClick={(e) => {
+                          if (l === "MJS Edukasi") {
+                            e.preventDefault();
+                            setCurrentView("mjs-edukasi");
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }
+                        }}
                         className="text-white/45 text-sm hover:text-[#C89B3C] transition-colors duration-200"
                       >
                         {l}
