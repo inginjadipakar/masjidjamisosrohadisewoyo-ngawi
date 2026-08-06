@@ -1438,8 +1438,8 @@ export default function App() {
                     MJS{" "}
                     <span className="italic" style={{ color: "#7dd3fc" }}>Edukasi</span>
                   </h1>
-                  <p className="text-white/75 text-sm sm:text-base leading-relaxed mb-7 max-w-xl font-medium">
-                    Ilmu untuk Peradaban. Program edukasi lintas bidang dari Masjid Jami Sosrohadisewoyo — memberdayakan umat lewat pengetahuan Sains, Digital, Kesehatan, dan Bisnis.
+                  <p className="text-white/80 text-sm sm:text-base leading-relaxed mb-7 max-w-xl font-medium">
+                    Menghadirkan Solusi Umat Berbasis Tauhid. Melalui gagasan Masjid Peradaban, MJS Edukasi hadir menjadi wadah transformasi ilmu—menghubungkan pengetahuan Sains, Digital, Kesehatan, dan Bisnis kembali pada tauhidullah demi kemaslahatan bersama.
                   </p>
                   <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm font-bold">
                     {[
@@ -1457,39 +1457,63 @@ export default function App() {
               </div>
             </div>
 
-            {/* ── Visi Section ── */}
+            {/* ── Visi Section (Anti-AI Slop Editorial Layout) ── */}
             <div className="max-w-[1240px] mx-auto px-6 mb-16">
-              <div className="bg-white rounded-3xl p-8 sm:p-10 shadow-xl border border-slate-200/80">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-                  <div>
-                    <span className="text-[#0F766E] text-xs font-bold uppercase tracking-widest block mb-3">Visi & Misi</span>
+              <div className="bg-gradient-to-b from-white to-emerald-50/30 rounded-3xl p-8 sm:p-12 shadow-2xl border border-emerald-900/10 relative overflow-hidden">
+                {/* Subtle background glow */}
+                <div className="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl opacity-10 pointer-events-none" style={{ background: "radial-gradient(circle, #0F766E, #C89B3C)" }} />
+                
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch relative z-10">
+                  <div className="lg:col-span-7 flex flex-col justify-center">
+                    <div className="inline-flex items-center gap-2 bg-[#064E3B]/10 border border-[#064E3B]/20 px-3.5 py-1 rounded-full text-xs font-black text-[#064E3B] uppercase tracking-widest mb-4">
+                      <span>Visi & Misi MJS Edukasi</span>
+                    </div>
+                    
                     <h2
-                      className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight mb-5"
+                      className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 leading-tight mb-6"
                       style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                     >
-                      Masjid sebagai{" "}
-                      <span className="text-[#0F766E] italic">Pusat Ilmu</span>
+                      Masjid Peradaban:{" "}
+                      <span className="text-[#0F766E] italic underline decoration-[#C89B3C]/40 decoration-wavy underline-offset-8">
+                        Solusi Umat Berbasis Tauhid
+                      </span>
                     </h2>
-                    <p className="text-slate-600 text-sm sm:text-base leading-relaxed mb-4">
-                      MJS Edukasi lahir dari visi Masjid Jami Sosrohadisewoyo sebagai <strong>Masjid Peradaban</strong> — bukan sekadar tempat ibadah, tetapi pusat transformasi umat melalui ilmu pengetahuan.
+                    
+                    <p className="text-slate-700 text-sm sm:text-base leading-relaxed mb-5 font-medium">
+                      Hakikat <strong>Masjid Peradaban</strong> adalah menjadi tempat lahirnya solusi konkrit atas berbagai tantangan dan kebutuhan umat. Masjid Jami Sosrohadisewoyo (MJS) meyakini bahwa salah satu pilar solusi terbaik untuk membangun daya saing dan karakter masyarakat adalah melalui <strong>edukasi yang berkemajuan</strong>.
                     </p>
-                    <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
-                      Melalui unit usaha BUMM, kami menghadirkan program edukasi berkualitas yang terjangkau, berbasis nilai-nilai Islam, dan berdampak nyata bagi masyarakat Ngawi dan sekitarnya.
+                    
+                    <p className="text-slate-700 text-sm sm:text-base leading-relaxed mb-6 font-medium">
+                      Ciri khas utama edukasi di MJS terletak pada <strong>fondasi Tauhid</strong>. Setiap disiplin ilmu—baik Sains, Digital, Kesehatan, maupun Bisnis—tidak dipelajari secara sekuler, melainkan ditautkan kembali pada keesaan Allah SWT. Kami meyakini bahwa ilmu pengetahuan pada hakikatnya bersumber dari Sang Pencipta dan ditujukan untuk mengabdi serta menebar manfaat bagi kemanusiaan.
                     </p>
+
+                    {/* High-end Editorial Quote Box */}
+                    <div className="bg-slate-900 text-white rounded-2xl p-5 border-l-4 border-[#C89B3C] shadow-lg relative">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-[#C89B3C] mb-1">— Prinsip Pembelajaran MJS</div>
+                      <p className="text-xs sm:text-sm font-semibold italic text-slate-200 leading-relaxed">
+                        “Menautkan akal dengan wahyu, menjadikan sains dan teknologi sebagai jalan mengenal keagungan Sang Pencipta dan mengalirkan kemaslahatan bagi sesama.”
+                      </p>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    {[
-                      { icon: "🕌", val: "1", label: "Pusat Edukasi Masjid", color: "#064E3B" },
-                      { icon: "👨‍🎓", val: "4", label: "Divisi Program", color: "#0F766E" },
-                      { icon: "📚", val: "12+", label: "Topik Kajian", color: "#C89B3C" },
-                      { icon: "🌟", val: "2026", label: "Tahun Berdiri", color: "#1e3a5f" },
-                    ].map((s) => (
-                      <div key={s.label} className="bg-slate-50 rounded-2xl p-5 border border-slate-100 text-center">
-                        <div className="text-3xl mb-2">{s.icon}</div>
-                        <div className="text-2xl font-black mb-1" style={{ color: s.color }}>{s.val}</div>
-                        <div className="text-xs text-slate-500 font-semibold">{s.label}</div>
-                      </div>
-                    ))}
+
+                  <div className="lg:col-span-5 flex flex-col justify-between gap-4">
+                    <div className="grid grid-cols-2 gap-4 h-full">
+                      {[
+                        { icon: "🕌", val: "1", label: "Pusat Solusi Masjid", desc: "Masjid sebagai episentrum transformasi", color: "#064E3B" },
+                        { icon: "☝️", val: "Tauhid", label: "Pondasi Utama", desc: "Pangkal setiap cabang keilmuan", color: "#0F766E" },
+                        { icon: "👨‍🎓", val: "4", label: "Divisi Program", desc: "Sains, Digital, Sehat & Bisnis", color: "#C89B3C" },
+                        { icon: "🌟", val: "2026", label: "Tahun Berdiri", desc: "Inovasi BUMM berkelanjutan", color: "#1e3a5f" },
+                      ].map((s) => (
+                        <div key={s.label} className="bg-white/80 backdrop-blur-md rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1">
+                          <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">{s.icon}</div>
+                          <div>
+                            <div className="text-2xl font-black mb-0.5 tracking-tight" style={{ color: s.color }}>{s.val}</div>
+                            <div className="text-xs font-bold text-slate-800">{s.label}</div>
+                            <div className="text-[10px] text-slate-500 font-medium mt-1 leading-tight">{s.desc}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1506,7 +1530,7 @@ export default function App() {
                   4 Divisi MJS Edukasi
                 </h2>
                 <p className="text-slate-500 text-sm font-medium">
-                  Setiap divisi dirancang untuk memberdayakan umat di bidang yang relevan dengan kebutuhan zaman.
+                  Setiap divisi dirancang sebagai solusi nyata untuk memberdayakan umat dengan mengintegrasikan nilai-nilai tauhid dan kecakapan masa kini.
                 </p>
               </div>
 
@@ -1520,9 +1544,9 @@ export default function App() {
                     color: "#0f4c75",
                     colorLight: "#bae6fd",
                     bgGrad: "linear-gradient(135deg, #0f172a, #1e3a5f)",
-                    tag: "Sains",
+                    tag: "Sains & Tauhid",
                     tagBg: "bg-sky-50 text-sky-700 border-sky-200",
-                    desc: "Program belajar Fisika dan Matematika dengan pendekatan kontekstual dan Islami. Cocok untuk pelajar, mahasiswa, dan siapapun yang ingin memperkuat pondasi sains.",
+                    desc: "Mengkaji hukum alam dan keindahan matematika sebagai bukti keagungan tauhid. Melatih nalar kritis dan pemahaman sains yang mendalam bagi generasi pembangun peradaban.",
                     programs: ["Bimbel Fisika SMP/SMA", "Kelas Matematika Dasar & Lanjut", "Try Out & Pembahasan Soal", "Olimpiade Sains Persiapan"],
                     cta: "Daftar Kelas Sains",
                   },
@@ -1534,9 +1558,9 @@ export default function App() {
                     color: "#6366f1",
                     colorLight: "#c7d2fe",
                     bgGrad: "linear-gradient(135deg, #1e1b4b, #312e81)",
-                    tag: "Digital",
+                    tag: "Digital & Solusi",
                     tagBg: "bg-indigo-50 text-indigo-700 border-indigo-200",
-                    desc: "Kelas literasi digital, pemrograman dasar, dan pengenalan AI/teknologi masa kini. Mempersiapkan generasi Muslim yang melek teknologi dan mampu bersaing di era digital.",
+                    desc: "Menguasai teknologi dan kecerdasan buatan (AI) sebagai sarana dakwah, peningkatan produktivitas, dan solusi digital umat yang adaptif di era modern.",
                     programs: ["Pengenalan AI & ChatGPT", "Kelas Coding Pemula", "Desain Grafis & Canva", "Media Sosial untuk Dakwah"],
                     cta: "Daftar Kelas Digital",
                   },
@@ -1548,9 +1572,9 @@ export default function App() {
                     color: "#0F766E",
                     colorLight: "#a7f3d0",
                     bgGrad: "linear-gradient(135deg, #022c22, #064E3B)",
-                    tag: "Kesehatan",
+                    tag: "Kesehatan & Thibbun",
                     tagBg: "bg-emerald-50 text-emerald-700 border-emerald-200",
-                    desc: "Seminar dan talkshow kesehatan rutin menghadirkan narasumber dokter dan tenaga medis. Membahas kesehatan fisik, mental, keluarga, dan gizi dari perspektif Islam.",
+                    desc: "Menjaga amanah kesehatan fisik dan jiwa sesuai nilai-nilai Islam melalui edukasi medis interaktif bersama narasumber dokter dan pakar kesehatan.",
                     programs: ["Health Talk Bulanan", "Pemeriksaan Kesehatan Gratis", "Kelas Parenting & Gizi Anak", "Kesehatan Mental & Jiwa"],
                     cta: "Ikut Health Talk",
                   },
@@ -1562,9 +1586,9 @@ export default function App() {
                     color: "#C89B3C",
                     colorLight: "#fde68a",
                     bgGrad: "linear-gradient(135deg, #451a03, #78350f)",
-                    tag: "Bisnis",
+                    tag: "Muamalah & Kemandirian",
                     tagBg: "bg-amber-50 text-amber-700 border-amber-200",
-                    desc: "Pelatihan wirausaha, strategi penjualan, dan pengembangan UMKM berbasis halal. Mendorong kemandirian ekonomi umat dengan prinsip muamalah yang benar.",
+                    desc: "Membangun kemandirian ekonomi umat melalui wirausaha halal, strategi penjualan etis, dan pengembangan usaha berbasis keadilan syariah.",
                     programs: ["Kelas Sales & Negosiasi", "Workshop UMKM Halal", "Digital Marketing Dasar", "Manajemen Keuangan Syariah"],
                     cta: "Daftar Pelatihan Bisnis",
                   },
@@ -1638,12 +1662,12 @@ export default function App() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[
-                      { icon: "🕌", title: "Berbasis Masjid", desc: "Dikelola langsung oleh takmir masjid dengan nilai-nilai Islam sebagai fondasi setiap program." },
-                      { icon: "💰", title: "Biaya Terjangkau", desc: "Harga program jauh di bawah pasar, bahkan tersedia beasiswa bagi yang membutuhkan." },
+                      { icon: "☝️", title: "Pondasi Berbasis Tauhid", desc: "Mengintegrasikan keilmuan modern (Sains, Digital, Bisnis, Kesehatan) dengan mentauhidkan Sang Pencipta." },
+                      { icon: "🕌", title: "Solusi Konkrit Umat", desc: "Mewujudkan misi Masjid Peradaban yang menjawab kebutuhan riil masyarakat secara solutif dan aplikatif." },
+                      { icon: "💰", title: "Biaya Terjangkau", desc: "Harga program sangat terjangkau, bahkan tersedia beasiswa bagi yang membutuhkan." },
                       { icon: "👨‍🏫", title: "Pengajar Berpengalaman", desc: "Narasumber dan pengajar adalah praktisi, akademisi, dan profesional di bidangnya." },
                       { icon: "🤝", title: "Komunitas Supportif", desc: "Bergabung dengan komunitas belajar yang saling mendukung dan berkomitmen pada kebaikan." },
-                      { icon: "📜", title: "Sertifikat Resmi", desc: "Setiap peserta mendapatkan sertifikat kelulusan yang dapat digunakan untuk keperluan karir." },
-                      { icon: "🌱", title: "Dampak Sosial", desc: "Sebagian pendapatan program digunakan untuk mendanai program sosial masjid (ATM Beras, Santunan, dll)." },
+                      { icon: "🌱", title: "Dampak Sosial Jariyah", desc: "Sebagian pendapatan program dialokasikan untuk mendanai program sosial masjid (ATM Beras, Santunan, dll)." },
                     ].map((feat) => (
                       <div key={feat.title} className="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-5 hover:bg-white/15 transition-all duration-300">
                         <div className="text-3xl mb-3">{feat.icon}</div>
