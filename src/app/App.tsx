@@ -2519,8 +2519,8 @@ export default function App() {
               </div>
             </section>
 
-            {/* ── FOOTER SECTION ── */}
-            <footer className="sect-dark border-t border-[#c9a84c]/15 py-12">
+            {/* ── FOOTER SECTION (HITAM PEKAT ELEGAN) ── */}
+            <footer className="bg-[#06050a] text-[#f0ebe0] border-t border-[#c9a84c]/20 py-14">
               <div className="max-w-7xl mx-auto px-6 md:px-10">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                   <div className="flex items-center gap-3">
