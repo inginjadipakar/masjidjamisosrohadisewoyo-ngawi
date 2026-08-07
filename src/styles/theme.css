@@ -176,8 +176,88 @@
   }
 
   input {
-    font-size: var(--text-base);
+    font-size: var(--font-size);
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
   }
 }
+
+/* ─── Wedding Specific Themes & Animations ─── */
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+
+.sect-light {
+  background: #faf8f3;
+  color: #1a1710;
+}
+
+.sect-dark {
+  background: #06050a;
+  color: #f0ebe0;
+}
+
+.sect-cream {
+  background: #f3ede0;
+  color: #1a1710;
+}
+
+.font-serif-wedding {
+  font-family: 'DM Serif Display', Georgia, serif;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+.gold-shimmer {
+  background: linear-gradient(90deg, #b8902a, #c9a84c, #e8c97a, #f5e09a, #e8c97a, #c9a84c, #b8902a);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 5s linear infinite;
+}
+
+.gold-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c9a84c, transparent);
+}
+
+.gold-line-solid {
+  height: 1px;
+  background: rgba(201, 168, 76, 0.25);
+}
+
+.ornament-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #c9a84c;
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+}
+
+.ornament-line::before,
+.ornament-line::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(201, 168, 76, 0.35);
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+.card-lift {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+}
+

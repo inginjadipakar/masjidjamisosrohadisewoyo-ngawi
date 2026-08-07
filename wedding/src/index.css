@@ -1,0 +1,143 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+
+@import 'tailwindcss';
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #faf8f3;
+  color: #1a1710;
+}
+
+::-webkit-scrollbar { width: 0; }
+html { scrollbar-width: none; }
+
+/* ─── Section themes ─────────────────────────────────── */
+.sect-light {
+  background: #faf8f3;
+  color: #1a1710;
+}
+
+.sect-dark {
+  background: #06050a;
+  color: #f0ebe0;
+}
+
+.sect-cream {
+  background: #f3ede0;
+  color: #1a1710;
+}
+
+/* ─── Reveal animations ──────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(36px);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.from-left  { transform: translateX(-50px); }
+.reveal.from-right { transform: translateX(50px); }
+.reveal.visible    { opacity: 1; transform: translate(0); }
+
+.reveal-delay-1 { transition-delay: 0.10s; }
+.reveal-delay-2 { transition-delay: 0.20s; }
+.reveal-delay-3 { transition-delay: 0.30s; }
+.reveal-delay-4 { transition-delay: 0.40s; }
+.reveal-delay-5 { transition-delay: 0.50s; }
+
+/* ─── Typography ─────────────────────────────────────── */
+.font-serif { font-family: 'DM Serif Display', Georgia, serif; }
+
+/* ─── Gold shimmer ───────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+.gold-shimmer {
+  background: linear-gradient(90deg, #b8902a, #c9a84c, #e8c97a, #f5e09a, #e8c97a, #c9a84c, #b8902a);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 5s linear infinite;
+}
+
+/* ─── Gold lines ─────────────────────────────────────── */
+.gold-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c9a84c, transparent);
+}
+.gold-line-solid {
+  height: 1px;
+  background: rgba(201, 168, 76, 0.25);
+}
+
+/* ─── Ornament ───────────────────────────────────────── */
+.ornament-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #c9a84c;
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+}
+.ornament-line::before,
+.ornament-line::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(201, 168, 76, 0.35);
+}
+
+/* ─── Float animation ────────────────────────────────── */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+/* ─── Custom cursor ──────────────────────────────────── */
+.cursor-dot {
+  width: 7px; height: 7px;
+  background: #c9a84c;
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: multiply;
+}
+.cursor-ring {
+  width: 34px; height: 34px;
+  border: 1px solid rgba(201, 168, 76, 0.55);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+}
+
+/* ─── Card hover lift ────────────────────────────────── */
+.card-lift {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+}
+
+/* input styling */
+input, textarea, select {
+  outline: none;
+}
+input::placeholder, textarea::placeholder { color: #c4bbb0; }

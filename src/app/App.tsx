@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, ChevronDown, ChevronRight, ChevronLeft, ArrowRight, BookOpen, Users, Heart, Star, Wheat, Gift, Gem, Monitor, Handshake, ShoppingBag, Home, RefreshCw, Copy, Check, ShieldCheck, Sparkles } from "lucide-react";
+import { Menu, X, ChevronDown, ChevronRight, ChevronLeft, ArrowRight, BookOpen, Users, Heart, Star, Wheat, Gift, Gem, Monitor, Handshake, ShoppingBag, Home, RefreshCw, Copy, Check, ShieldCheck, Sparkles, HandHeart, GraduationCap } from "lucide-react";
 import { gsap } from "gsap";
 
 /* ── Ticker & Floating Waterfall animation injected once ── */
@@ -744,7 +744,7 @@ export default function App() {
   };
 
   const [activeMobileDropdown, setActiveMobileDropdown] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<"home" | "sewa-ruangan" | "mjs-edukasi">("home");
+  const [currentView, setCurrentView] = useState<"home" | "sewa-ruangan" | "mjs-edukasi" | "wedding-organizer">("home");
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLightNavbar, setIsLightNavbar] = useState(false);
 
@@ -753,7 +753,7 @@ export default function App() {
       const scrollY = window.scrollY;
       setIsScrolled(scrollY > 20);
 
-      if (currentView === "sewa-ruangan") {
+      if (currentView === "sewa-ruangan" || currentView === "wedding-organizer") {
         setIsLightNavbar(true);
         return;
       }
@@ -1242,6 +1242,11 @@ export default function App() {
                                 window.scrollTo({ top: 0, behavior: "smooth" });
                                 return;
                               }
+                              if (item.title === "Wedding Organizer") {
+                                setCurrentView("wedding-organizer");
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                                return;
+                              }
                               if (item.title === "MJS Edukasi — Overview" || item.title === "Sains (Fisika & Matematika)" || item.title === "Digital & AI" || item.title === "Kesehatan (Health Talk)" || item.title === "Bisnis & Sales") {
                                 setCurrentView("mjs-edukasi");
                                 window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1352,6 +1357,11 @@ export default function App() {
                               if (item.badge === "Segera Dibuka") return;
                               if (item.title === "Sewa Ruangan") {
                                 setCurrentView("sewa-ruangan");
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                                return;
+                              }
+                              if (item.title === "Wedding Organizer") {
+                                setCurrentView("wedding-organizer");
                                 window.scrollTo({ top: 0, behavior: "smooth" });
                                 return;
                               }
@@ -1813,6 +1823,743 @@ export default function App() {
                 </div>
               </div>
             </div>
+          </div>
+        ) : currentView === "wedding-organizer" ? (
+          /* ═══════════════════════════════════════════════════════════════
+             HALAMAN KHALAYAK WEDDING & AULA MASJID JAMI SOSROHADISEWOYO
+             (Terintegrasi dari folder /wedding dengan Aset Gambar Asli)
+          ═══════════════════════════════════════════════════════════════ */
+          <div className="min-h-screen bg-[#faf8f3] text-[#1a1710] font-sans relative">
+            
+            {/* Top Navigation Bar with Back-to-Home Button */}
+            <div className="fixed top-0 inset-x-0 z-50 bg-[#06050a]/95 backdrop-blur border-b border-[rgba(201,168,76,0.25)] shadow-xl">
+              <div className="max-w-7xl mx-auto px-6 md:px-10 flex items-center justify-between h-16 md:h-20">
+                {/* Back to main home */}
+                <button
+                  onClick={() => {
+                    setCurrentView("home");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="inline-flex items-center gap-2 bg-[#c9a84c] text-[#06050a] hover:bg-[#b8902a] hover:text-white font-extrabold px-4 py-2 rounded-full text-xs transition-all duration-300 shadow-md cursor-pointer"
+                >
+                  <ChevronLeft size={16} />
+                  <span>Kembali ke Beranda MJS</span>
+                </button>
+
+                {/* Internal Wedding Section Links */}
+                <div className="hidden lg:flex items-center gap-7 text-[11px] font-bold tracking-widest uppercase text-[#9a927e]">
+                  <a href="#tentang-wedding" className="hover:text-[#c9a84c] transition-colors">Tentang</a>
+                  <a href="#ibadah-wedding" className="hover:text-[#c9a84c] transition-colors">Ibadah</a>
+                  <a href="#pernikahan-wedding" className="hover:text-[#c9a84c] transition-colors">Pernikahan</a>
+                  <a href="#undangan-wedding" className="hover:text-[#c9a84c] transition-colors">Undangan Digital</a>
+                  <a href="#galeri-wedding" className="hover:text-[#c9a84c] transition-colors">Galeri</a>
+                  <a href="#kontak-wedding" className="hover:text-[#c9a84c] transition-colors">Kontak</a>
+                </div>
+
+                {/* Booking CTA */}
+                <a
+                  href="#kontak-wedding"
+                  className="inline-flex items-center gap-2 text-[11px] font-bold tracking-widest uppercase px-4 py-2 border border-[#c9a84c] text-[#c9a84c] hover:bg-[#c9a84c] hover:text-[#06050a] transition-all duration-300 rounded"
+                >
+                  Booking Venue
+                </a>
+              </div>
+            </div>
+
+            {/* ── HERO SECTION ── */}
+            <section className="sect-dark relative min-h-screen flex items-end overflow-hidden pt-20">
+              <div className="absolute inset-0">
+                <img
+                  src="/media/image/wedding/WhatsApp_Image_2026-08-06_at_10.12.05.jpeg"
+                  alt="Fasad geometris putih Masjid Jami Sosrohadisewoyo"
+                  className="w-full h-full object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#06050a] via-[rgba(6,5,10,0.55)] to-[rgba(6,5,10,0.25)]" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#06050a] via-transparent to-transparent opacity-70" />
+              </div>
+
+              {/* Decorative star */}
+              <div className="absolute top-32 right-12 opacity-30 hidden md:block animate-pulse">
+                <div className="w-24 h-24 rounded-full border border-[#c9a84c]/50 flex items-center justify-center">
+                  <span className="text-[#c9a84c] text-3xl">✦</span>
+                </div>
+              </div>
+
+              <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-10 pb-20 md:pb-28 w-full">
+                <div className="max-w-3xl">
+                  <div className="ornament-line mb-5" style={{ color: '#c9a84c' }}>
+                    <span className="text-[#c9a84c] font-bold">Ngawi, Jawa Timur</span>
+                  </div>
+                  
+                  <h1 className="font-serif-wedding text-4xl sm:text-6xl md:text-7xl leading-[0.95] mb-6 text-[#f0ebe0]">
+                    Tempat Suci,
+                    <br />
+                    <em className="gold-shimmer not-italic">Momen Abadi</em>
+                  </h1>
+                  
+                  <p className="text-[#a09890] text-base md:text-lg max-w-xl leading-relaxed mb-10 font-medium">
+                    Masjid Jami Sosrohadisewoyo — ruang ibadah yang khusyuk sekaligus venue pernikahan adat Jawa yang memesona, dengan arsitektur mashrabiya yang menawan di Kabupaten Ngawi.
+                  </p>
+
+                  <div className="flex flex-wrap gap-4">
+                    <a
+                      href="#pernikahan-wedding"
+                      className="inline-flex items-center gap-3 bg-[#c9a84c] text-white font-bold text-[11px] tracking-widest uppercase px-7 py-4 hover:bg-[#b8902a] transition-colors duration-300 rounded shadow-lg"
+                    >
+                      <span>Venue Pernikahan</span>
+                      <span>→</span>
+                    </a>
+                    <a
+                      href="#undangan-wedding"
+                      className="inline-flex items-center gap-3 border border-[#c9a84c]/60 text-[#c9a84c] font-bold text-[11px] tracking-widest uppercase px-7 py-4 hover:bg-[#c9a84c]/10 transition-colors duration-300 rounded"
+                    >
+                      Undangan Digital
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ── TENTANG SECTION ── */}
+            <section id="tentang-wedding" className="sect-light py-24 md:py-32">
+              <div className="max-w-7xl mx-auto px-6 md:px-10">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+                  {/* Image */}
+                  <div className="relative">
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-2xl shadow-2xl">
+                      <img
+                        src="/media/image/wedding/WhatsApp_Image_2026-08-06_at_10.12.06.jpeg"
+                        alt="Pelepasan balon di halaman masjid"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    {/* Stat badge */}
+                    <div className="absolute -bottom-6 -right-4 md:-right-8 bg-white border border-[#c9a84c]/40 shadow-xl p-6 w-48 rounded-xl">
+                      <p className="font-serif-wedding text-4xl text-[#c9a84c]">500+</p>
+                      <p className="text-[10px] font-bold tracking-wider text-[#a09078] uppercase mt-1 leading-tight">
+                        Pasangan Diberkahi
+                      </p>
+                    </div>
+                    <div className="absolute -top-4 -left-4 w-14 h-14 border-t-2 border-l-2 border-[#c9a84c] opacity-60" />
+                  </div>
+
+                  {/* Text */}
+                  <div>
+                    <div className="ornament-line mb-5">
+                      <span className="text-[#b8902a] font-bold">Didirikan 2022</span>
+                    </div>
+                    
+                    <h2 className="font-serif-wedding text-4xl md:text-5xl text-[#1a1710] leading-tight mb-5">
+                      Dua Jiwa dalam
+                      <br />
+                      Satu Ruang Sakral
+                    </h2>
+                    
+                    <div className="gold-line mb-8" />
+                    
+                    <div className="space-y-4 text-[#5a5040] leading-relaxed text-sm font-medium">
+                      <p>
+                        Masjid Jami Sosrohadisewoyo berdiri sebagai salah satu ikon arsitektur Islam kontemporer di Kabupaten Ngawi — dengan fasad mashrabiya putih yang mengukir cahaya menjadi bayangan geometris memukau.
+                      </p>
+                      <p>
+                        Di sinilah dua momen paling bermakna berpadu: kekhusyukan ibadah harian dan keagungan upacara pernikahan adat Jawa yang kaya tradisi.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6 mt-10">
+                      {[
+                        { v: '2022', l: 'Tahun Berdiri' },
+                        { v: '400', l: 'Kapasitas Tamu' },
+                      ].map((s) => (
+                        <div key={s.l} className="text-center border-l border-[#c9a84c]/20 pl-6 first:border-0 first:pl-0">
+                          <p className="font-serif-wedding text-3xl font-bold text-[#c9a84c]">{s.v}</p>
+                          <p className="text-[10px] font-bold tracking-wider text-[#a09078] uppercase mt-1 leading-tight">{s.l}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ── IBADAH SECTION ── */}
+            <section id="ibadah-wedding" className="sect-dark py-24 md:py-32 relative overflow-hidden">
+              <div className="max-w-7xl mx-auto px-6 md:px-10 relative">
+                <div className="text-center max-w-xl mx-auto mb-16">
+                  <div className="ornament-line justify-center mb-4">
+                    <span className="text-[#c9a84c] font-bold">Spiritual & Kemasyarakatan</span>
+                  </div>
+                  <h2 className="font-serif-wedding text-4xl md:text-5xl text-[#f0ebe0] mb-4">
+                    Pusat Ibadah & Komunitas
+                  </h2>
+                  <p className="text-[#7a7068] text-sm leading-relaxed font-medium">
+                    Lebih dari sekadar bangunan — jantung spiritual ribuan jemaah yang datang setiap hari untuk beribadah dan menimba ilmu agama.
+                  </p>
+                </div>
+
+                {/* Feature Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[
+                    { Icon: Users, t: 'Shalat Berjamaah', d: 'Lima waktu shalat berjamaah dengan imam hafizh. Suasana khidmat di ruang ibadah utama MJS.' },
+                    { Icon: BookOpen, t: 'Kajian Rutin', d: 'Program pengajian mingguan, tafsir Al-Quran, dan ceramah agama yang memperkaya pemahaman spiritual.' },
+                    { Icon: GraduationCap, t: 'Pendidikan Islam', d: 'Madrasah dan TPQ untuk generasi muda, menanamkan nilai Islam rahmatan lil alamin.' },
+                    { Icon: Heart, t: 'Akad Nikah', d: 'Prosesi ijab qabul di ruang utama masjid, dipandu penghulu bersertifikat KUA.' },
+                    { Icon: Star, t: 'Ramadhan Berkah', d: 'Tarawih, tadarus, itikaf, dan buka puasa bersama selama bulan penuh keberkahan.' },
+                    { Icon: HandHeart, t: 'Layanan Sosial', d: 'Penyaluran zakat, infaq, sedekah, dan program sosial kemasyarakatan.' },
+                  ].map((item) => (
+                    <div
+                      key={item.t}
+                      className="bg-[#0f0d14] border border-[#c9a84c]/20 p-8 rounded-xl hover:border-[#c9a84c] transition-all duration-300 group"
+                    >
+                      <div className="w-11 h-11 rounded-lg bg-[#c9a84c]/10 border border-[#c9a84c]/30 flex items-center justify-center mb-5 group-hover:bg-[#c9a84c]/20 transition-colors">
+                        <item.Icon size={22} className="text-[#c9a84c]" strokeWidth={1.5} />
+                      </div>
+                      <h3 className="font-serif-wedding text-xl text-[#f0ebe0] mb-3 group-hover:text-[#c9a84c] transition-colors">{item.t}</h3>
+                      <p className="text-sm text-[#7a7068] leading-relaxed font-medium">{item.d}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Jadwal Shalat */}
+                <div className="mt-16 border border-[#c9a84c]/20 p-8 md:p-10 rounded-2xl bg-[#0f0d14]/60 backdrop-blur">
+                  <p className="text-center text-[10px] font-bold tracking-[0.35em] text-[#c9a84c] uppercase mb-8">
+                    Jadwal Shalat — Ngawi & Sekitarnya
+                  </p>
+                  <div className="grid grid-cols-3 md:grid-cols-6 gap-4 md:gap-0">
+                    {[
+                      { n: 'Subuh', t: '04:28' }, { n: 'Dhuha', t: '06:12' },
+                      { n: 'Dzuhur', t: '11:50' }, { n: 'Ashar', t: '15:06' },
+                      { n: 'Maghrib', t: '17:42' }, { n: 'Isya', t: '18:56' },
+                    ].map((p, i) => (
+                      <div
+                        key={p.n}
+                        className={`text-center md:border-r border-[#c9a84c]/15 last:border-0 ${i < 3 ? 'border-b md:border-b-0 border-[#c9a84c]/15 pb-4 md:pb-0' : ''}`}
+                      >
+                        <p className="text-[10px] font-bold tracking-widest text-[#7a7068] uppercase mb-1">{p.n}</p>
+                        <p className="font-serif-wedding text-2xl text-[#c9a84c]">{p.t}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ── PERNIKAHAN SECTION ── */}
+            <section id="pernikahan-wedding" className="sect-light py-24 md:py-32">
+              <div className="max-w-7xl mx-auto px-6 md:px-10">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-14">
+                  <div>
+                    <div className="ornament-line mb-4">
+                      <span className="text-[#b8902a] font-bold">Venue Istimewa</span>
+                    </div>
+                    <h2 className="font-serif-wedding text-4xl md:text-6xl text-[#1a1710] leading-tight">
+                      Pernikahan
+                      <br />
+                      <em className="gold-shimmer not-italic">Tak Terlupakan</em>
+                    </h2>
+                  </div>
+                  <p className="text-[#7a7068] max-w-sm text-sm leading-relaxed font-medium">
+                    Dari akad nikah yang sakral hingga resepsi adat Jawa yang megah — kami menyediakan ruang dan layanan yang membuat hari istimewa Anda menjadi kenangan seumur hidup.
+                  </p>
+                </div>
+
+                {/* Hero wedding image */}
+                <div className="mb-6 relative overflow-hidden rounded-2xl shadow-2xl h-[360px] sm:h-[480px] md:h-[540px]">
+                  <img
+                    src="/media/image/wedding/WhatsApp Image 2026-08-07 at 19.10.11.jpeg"
+                    alt="MJS Walimah & Sewa Aula"
+                    className="w-full h-full object-cover object-center"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+                  <div className="absolute bottom-8 left-8 md:left-12">
+                    <p className="font-serif-wedding text-xl md:text-3xl text-[#f0ebe0] italic">"Momen Sakral Pernikahan —</p>
+                    <p className="font-serif-wedding text-xl md:text-3xl text-[#c9a84c] italic">Penuh Kehangatan & Keberkahan"</p>
+                  </div>
+                </div>
+
+                {/* 4-column photo strip */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-16">
+                  {[
+                    { src: '/media/image/wedding/WhatsApp_Image_2026-08-06_at_10.12.08.jpeg', alt: 'Pasangan berjalan di lorong ballroom' },
+                    { src: '/media/image/wedding/WhatsApp_Image_2026-08-06_at_10.12.09__1_.jpeg', alt: 'Pasangan pengantin putih di dinding bata' },
+                    { src: '/media/image/wedding/WhatsApp_Image_2026-08-06_at_10.12.07.jpeg', alt: 'Prosesi pengantin melalui gerbang bambu' },
+                    { src: '/media/image/wedding/WhatsApp_Image_2026-08-06_at_10.12.06__1_.jpeg', alt: 'Pengantin wanita di taman samping masjid' },
+                  ].map((imgItem, i) => (
+                    <div key={i} className="overflow-hidden rounded-xl group aspect-[3/4]">
+                      <img
+                        src={imgItem.src}
+                        alt={imgItem.alt}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Split: features + image */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-20 items-center">
+                  <div className="space-y-5">
+                    <h3 className="font-serif-wedding text-2xl md:text-3xl text-[#1a1710]">Aula yang Megah & Berkesan</h3>
+                    <p className="text-[#7a7068] text-sm leading-relaxed font-medium">
+                      Aula Masjid Jami Sosrohadisewoyo dengan sentuhan arsitektur Islam yang elegan mampu menampung hingga 400 tamu. Setiap sudut dirancang menghadirkan suasana sakral sekaligus memukau.
+                    </p>
+                    <ul className="space-y-3">
+                      {[
+                        'Kapasitas 400 tamu duduk',
+                        'Aula ber-AC dengan sistem audio & penataan syar\'i',
+                        'Dekorasi custom sesuai tema pernikahan tradisional & modern',
+                        'Area parkir untuk 50 kendaraan',
+                        'Ruang pengantin (bridal room) eksklusif',
+                        'Katering halal tersertifikat',
+                      ].map((f) => (
+                        <li key={f} className="flex items-start gap-3 text-sm text-[#5a5040] font-medium">
+                          <span className="text-[#c9a84c] shrink-0 mt-0.5">◆</span>
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="overflow-hidden rounded-2xl shadow-xl min-h-[340px]">
+                    <img
+                      src="/media/image/wedding/WhatsApp_Image_2026-08-06_at_10.12.10.jpeg"
+                      alt="Pasangan pengantin putih di depan masjid"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+
+                {/* Packages */}
+                <div className="text-center mb-12">
+                  <div className="ornament-line justify-center mb-3">
+                    <span className="text-[#b8902a] font-bold">Pilih Paket Anda</span>
+                  </div>
+                  <h2 className="font-serif-wedding text-3xl md:text-4xl text-[#1a1710]">Paket Pernikahan & Resepsi</h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Paket Akad */}
+                  <div className="card-lift relative overflow-hidden border border-[#c9a84c]/20 bg-[#faf8f3] p-8 rounded-2xl shadow-sm flex flex-col justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold tracking-[0.3em] text-[#b8902a] uppercase mb-2">Paket Akad</p>
+                      <p className="font-serif-wedding text-3xl text-[#1a1710] mb-0.5">Rp 500.000</p>
+                      <p className="text-xs text-[#a0917a] mb-6 font-medium">per acara</p>
+                      <div className="gold-line mb-6" />
+                      <ul className="space-y-3 text-sm text-[#5a5040] font-medium">
+                        {['Akad nikah di ruang utama masjid', 'Koordinasi dengan penghulu KUA', 'Dekorasi minimalis area akad', 'Fasilitas sound system masjid', 'Kapasitas 400 tamu'].map((f, i) => (
+                          <li key={i} className="flex items-start gap-2.5">
+                            <span className="text-[#c9a84c] shrink-0 mt-0.5">◆</span>
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <button
+                      onClick={() => handleRoomBooking("Paket Akad Nikah MJS (Rp 500.000)")}
+                      className="mt-8 w-full py-3 text-[11px] font-bold tracking-widest uppercase border border-[#c9a84c] text-[#c9a84c] hover:bg-[#c9a84c] hover:text-white transition-all duration-300 rounded cursor-pointer"
+                    >
+                      Pesan Paket Akad
+                    </button>
+                  </div>
+
+                  {/* Paket Resepsi (Hot) */}
+                  <div className="card-lift relative overflow-hidden border-2 border-[#c9a84c] bg-white p-8 rounded-2xl shadow-xl flex flex-col justify-between">
+                    <span className="absolute top-4 right-4 text-[9px] font-extrabold tracking-widest bg-[#c9a84c] text-white px-3 py-1 uppercase rounded-full shadow-sm">
+                      Paling Populer
+                    </span>
+                    <div>
+                      <p className="text-[10px] font-bold tracking-[0.3em] text-[#b8902a] uppercase mb-2">Paket Resepsi</p>
+                      <p className="font-serif-wedding text-3xl text-[#1a1710] mb-0.5">Rp 5.000.000</p>
+                      <p className="text-xs text-[#a0917a] mb-6 font-medium">per acara</p>
+                      <div className="gold-line mb-6" />
+                      <ul className="space-y-3 text-sm text-[#5a5040] font-medium">
+                        {['Sewa aula MJS seharian penuh', 'Dekorasi tema adat Jawa / Islami', 'Katering 200 porsi halal', 'Sound system & tata lampu', 'Pendampingan panitia MJS', 'Undangan digital premium'].map((f, i) => (
+                          <li key={i} className="flex items-start gap-2.5">
+                            <span className="text-[#c9a84c] shrink-0 mt-0.5">◆</span>
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <button
+                      onClick={() => handleRoomBooking("Paket Resepsi MJS (Rp 5.000.000)")}
+                      className="mt-8 w-full py-3.5 text-[11px] font-extrabold tracking-widest uppercase bg-[#c9a84c] text-white hover:bg-[#b8902a] transition-all duration-300 rounded shadow-md cursor-pointer"
+                    >
+                      Pesan Paket Resepsi
+                    </button>
+                  </div>
+
+                  {/* Paket Lengkap */}
+                  <div className="card-lift relative overflow-hidden border border-[#c9a84c]/20 bg-[#faf8f3] p-8 rounded-2xl shadow-sm flex flex-col justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold tracking-[0.3em] text-[#b8902a] uppercase mb-2">Paket Lengkap</p>
+                      <p className="font-serif-wedding text-3xl text-[#1a1710] mb-0.5">Rp 10.000.000</p>
+                      <p className="text-xs text-[#a0917a] mb-6 font-medium">per acara</p>
+                      <div className="gold-line mb-6" />
+                      <ul className="space-y-3 text-sm text-[#5a5040] font-medium">
+                        {['Akad + resepsi full package', 'Sewa aula seharian + area outdoor', 'Katering 400 porsi halal premium', 'Dekorasi pelaminan custom Islami', 'Dokumentasi foto & video', 'Undangan digital premium', 'Koordinasi penuh panitia MJS'].map((f, i) => (
+                          <li key={i} className="flex items-start gap-2.5">
+                            <span className="text-[#c9a84c] shrink-0 mt-0.5">◆</span>
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <button
+                      onClick={() => handleRoomBooking("Paket Lengkap MJS (Rp 10.000.000)")}
+                      className="mt-8 w-full py-3 text-[11px] font-bold tracking-widest uppercase border border-[#c9a84c] text-[#c9a84c] hover:bg-[#c9a84c] hover:text-white transition-all duration-300 rounded cursor-pointer"
+                    >
+                      Pesan Paket Lengkap
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ── UNDANGAN DIGITAL SECTION ── */}
+            <section id="undangan-wedding" className="sect-dark py-24 md:py-32 relative overflow-hidden">
+              <div className="max-w-7xl mx-auto px-6 md:px-10 relative">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+                  {/* Phone Mockup Preview */}
+                  <div className="order-2 lg:order-1">
+                    <div className="relative max-w-[280px] mx-auto">
+                      <div className="border border-[#c9a84c]/30 rounded-[32px] overflow-hidden bg-[#0f0d14] p-1.5 shadow-2xl">
+                        <div className="rounded-[26px] overflow-hidden bg-[#07060a] border border-[#c9a84c]/20">
+                          <div className="flex flex-col items-center justify-center p-7 text-center min-h-[440px]">
+                            <div className="w-10 h-10 rounded-full border border-[#c9a84c] flex items-center justify-center text-[#c9a84c] mb-3">
+                              ✦
+                            </div>
+                            <p className="text-[8px] font-bold tracking-[0.35em] text-[#7a7068] uppercase mb-1">Undangan Pernikahan</p>
+                            <div className="gold-line my-3 w-full" />
+                            <p className="font-serif-wedding text-2xl text-[#c9a84c] italic">Rizky & Siti</p>
+                            <p className="text-[8px] text-[#5a5048] mt-1.5">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
+                            <div className="gold-line my-3 w-full" />
+                            <div className="bg-[#1a1620] rounded-xl p-3 w-full mt-2 border border-[#c9a84c]/20">
+                              <p className="text-[8px] font-bold tracking-wider text-[#7a7068] uppercase">Sabtu, 14 Februari 2026</p>
+                              <p className="text-[10px] font-bold text-[#c9a84c] mt-1">09.00 — 13.00 WIB</p>
+                              <p className="text-[8px] text-[#5a5048] mt-1 font-medium">Masjid Jami Sosrohadisewoyo, Ngawi</p>
+                            </div>
+                            <button className="mt-4 w-full bg-[#c9a84c] text-[#06050a] font-bold text-[8px] py-2.5 tracking-widest uppercase rounded">
+                              Konfirmasi Kehadiran
+                            </button>
+                            <div className="flex justify-center gap-3 mt-4">
+                              {['📍','📅','🎵','📸'].map((ic) => (
+                                <div key={ic} className="w-7 h-7 rounded-full border border-[#c9a84c]/30 flex items-center justify-center text-[10px]">{ic}</div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div className="order-1 lg:order-2">
+                    <div className="ornament-line mb-4">
+                      <span className="text-[#c9a84c] font-bold">Layanan Digital MJS</span>
+                    </div>
+                    <h2 className="font-serif-wedding text-4xl md:text-5xl text-[#f0ebe0] leading-tight mb-5">
+                      Undangan Digital
+                      <br />
+                      <em className="gold-shimmer not-italic">Elegan & Modern</em>
+                    </h2>
+                    <div className="gold-line mb-8" />
+                    <p className="text-[#7a7068] leading-relaxed mb-8 text-sm font-medium">
+                      Pembuatan undangan pernikahan digital yang menggabungkan estetika Islam kontemporer dengan kemudahan teknologi. Bagikan ke seluruh tamu dalam hitungan detik.
+                    </p>
+
+                    <div className="space-y-4 mb-10">
+                      {[
+                        { t: 'Desain Eksklusif', d: '20+ template premium terinspirasi motif Islam & batik Jawa' },
+                        { t: 'RSVP Otomatis', d: 'Konfirmasi kehadiran tamu real-time dengan rekap data' },
+                        { t: 'Fitur Lengkap', d: 'Peta petunjuk arah, musik syahdu, galeri foto, countdown, ucapan doa' },
+                        { t: 'Berbagi Mudah', d: 'Link unik siap dibagikan via WhatsApp, Instagram, dan Email' },
+                      ].map((item, i) => (
+                        <div
+                          key={item.t}
+                          className="flex items-start gap-4 p-4 rounded-xl border border-[#c9a84c]/10 bg-[#0f0d14] hover:border-[#c9a84c]/40 transition-colors"
+                        >
+                          <span className="text-[#c9a84c] shrink-0 mt-0.5">✦</span>
+                          <div>
+                            <p className="text-sm font-bold text-[#f0ebe0] mb-0.5">{item.t}</p>
+                            <p className="text-xs text-[#7a7068] font-medium">{item.d}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-4">
+                      <button
+                        onClick={() => handleRoomBooking("Layanan Undangan Digital MJS")}
+                        className="inline-flex items-center gap-2 bg-[#c9a84c] text-[#06050a] font-extrabold text-[11px] tracking-widest uppercase px-7 py-4 hover:bg-[#b8902a] hover:text-white transition-colors duration-300 rounded cursor-pointer"
+                      >
+                        Pesan Undangan Digital
+                      </button>
+                      <span className="text-xs text-[#7a7068] font-medium">
+                        <span className="text-[#c9a84c] font-bold">✓</span> Mulai Rp 350.000
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ── GALERI SECTION ── */}
+            <section id="galeri-wedding" className="sect-cream py-24 md:py-32">
+              <div className="max-w-7xl mx-auto px-6 md:px-10">
+                <div className="text-center mb-14">
+                  <div className="ornament-line justify-center mb-3">
+                    <span className="text-[#b8902a] font-bold">Kenangan Abadi</span>
+                  </div>
+                  <h2 className="font-serif-wedding text-4xl md:text-5xl text-[#1a1710]">Galeri Pernikahan MJS</h2>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  <div className="col-span-2 row-span-2 overflow-hidden rounded-2xl shadow-xl group">
+                    <img
+                      src="/media/image/wedding/WhatsApp_Image_2026-08-06_at_10.12.09.jpeg"
+                      alt="Pengantin adat Jawa hitam keemasan"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 min-h-[380px]"
+                    />
+                  </div>
+                  <div className="overflow-hidden rounded-xl shadow-md aspect-square group">
+                    <img
+                      src="/media/image/wedding/WhatsApp_Image_2026-08-06_at_10.12.10.jpeg"
+                      alt="Pasangan putih di depan masjid"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  </div>
+                  <div className="overflow-hidden rounded-xl shadow-md aspect-square group">
+                    <img
+                      src="/media/image/wedding/WhatsApp_Image_2026-08-06_at_10.12.09__1_.jpeg"
+                      alt="Pasangan putih di dinding bata"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  </div>
+                  <div className="overflow-hidden rounded-xl shadow-md aspect-square group">
+                    <img
+                      src="/media/image/wedding/WhatsApp_Image_2026-08-06_at_10.12.08.jpeg"
+                      alt="Pasangan berjalan di aisle"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  </div>
+                  <div className="overflow-hidden rounded-xl shadow-md aspect-square group">
+                    <img
+                      src="/media/image/wedding/WhatsApp_Image_2026-08-06_at_10.12.06__1_.jpeg"
+                      alt="Pengantin di taman"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  </div>
+                  <div className="col-span-2 overflow-hidden rounded-2xl shadow-md group aspect-[2/1]">
+                    <img
+                      src="/media/image/wedding/WhatsApp_Image_2026-08-06_at_10.12.07.jpeg"
+                      alt="Prosesi adat Jawa"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ── TESTIMONI SECTION ── */}
+            <section className="sect-dark py-24 md:py-32">
+              <div className="max-w-5xl mx-auto px-6 md:px-10 text-center">
+                <div className="ornament-line justify-center mb-4">
+                  <span className="text-[#c9a84c] font-bold">Kata Mereka</span>
+                </div>
+                <h2 className="font-serif-wedding text-3xl md:text-4xl text-[#f0ebe0] mb-16">Kesan Para Pasangan</h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {[
+                    { q: 'Hari pernikahan kami menjadi luar biasa berkat keindahan arsitektur masjid ini. Fasad putih geometrisnya menjadi latar foto yang tidak ternilai.', n: 'Alya & Fariz', d: 'Maret 2025' },
+                    { q: 'Tim pengelola masjid sangat membantu dari awal hingga akhir. Undangan digital yang mereka buat juga mendapat pujian dari semua tamu.', n: 'Nisa & Hendra', d: 'Juni 2025' },
+                    { q: 'Suasana ballroom dengan plafon geometris dan chandelier memberikan kesan mewah dan sakral yang sempurna untuk resepsi adat Jawa kami.', n: 'Ratih & Dimas', d: 'Oktober 2025' },
+                  ].map((t) => (
+                    <div
+                      key={t.n}
+                      className="border border-[#c9a84c]/20 bg-[#0f0d14] p-8 text-left rounded-2xl hover:border-[#c9a84c] transition-colors"
+                    >
+                      <div className="font-serif-wedding text-3xl text-[#c9a84c] mb-4">"</div>
+                      <p className="text-[#7a7068] text-sm leading-relaxed italic mb-6 font-medium">{t.q}</p>
+                      <div className="gold-line mb-4" />
+                      <p className="text-[#f0ebe0] text-sm font-bold">{t.n}</p>
+                      <p className="text-[10px] tracking-wider text-[#5a5048] uppercase mt-1 font-bold">{t.d}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* ── KONTAK & FORM SECTION ── */}
+            <section id="kontak-wedding" className="sect-light py-24 md:py-32">
+              <div className="max-w-7xl mx-auto px-6 md:px-10">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
+                  {/* Info Kontak */}
+                  <div>
+                    <div className="ornament-line mb-4">
+                      <span className="text-[#b8902a] font-bold">Hubungi Kami</span>
+                    </div>
+                    <h2 className="font-serif-wedding text-4xl md:text-5xl text-[#1a1710] leading-tight mb-6">
+                      Wujudkan
+                      <br />
+                      Pernikahan Impian Anda
+                    </h2>
+                    <p className="text-[#7a7068] leading-relaxed mb-10 text-sm font-medium">
+                      Tim kami siap membantu merencanakan hari istimewa Anda dari A sampai Z. Hubungi kami untuk konsultasi gratis dan penawaran terbaik.
+                    </p>
+
+                    <div className="space-y-6 mb-10">
+                      {[
+                        { ic: '📍', l: 'Alamat', v: 'Jl. Munginsidi No. 51 RT 011 RW 002 Pelem II, Desa Pelem, Ngawi, Jawa Timur' },
+                        { ic: '📞', l: 'Telepon / WhatsApp', v: '+62 878-9441-6915' },
+                        { ic: '📧', l: 'Email', v: 'info@masjidjami-sosrohadisewoyo.id' },
+                        { ic: '🕐', l: 'Jam Operasional', v: 'Senin–Minggu, 08.00–20.00 WIB' },
+                      ].map((item) => (
+                        <div key={item.l} className="flex items-start gap-4">
+                          <span className="text-xl shrink-0 mt-0.5">{item.ic}</span>
+                          <div>
+                            <p className="text-[10px] font-bold tracking-wider text-[#a09078] uppercase mb-1">{item.l}</p>
+                            <p className="text-[#1a1710] text-sm font-semibold">{item.v}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => handleRoomBooking("Konsultasi Pernikahan & Sewa Aula MJS")}
+                      className="inline-flex items-center gap-3 bg-[#064E3B] text-white hover:bg-[#0F766E] font-bold text-xs uppercase tracking-widest px-8 py-4 rounded-full shadow-lg transition-all"
+                    >
+                      <span>Hubungi via WhatsApp</span>
+                      <ArrowRight size={16} />
+                    </button>
+                  </div>
+
+                  {/* Form Pemesanan */}
+                  <div>
+                    <div className="border border-[#c9a84c]/30 bg-white p-8 md:p-10 rounded-2xl shadow-lg">
+                      <p className="text-[10px] font-bold tracking-[0.35em] text-[#a09078] uppercase mb-6">
+                        Formulir Pemesanan & Konsultasi
+                      </p>
+
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleRoomBooking("Formulir Pemesanan Venue / Paket Pernikahan MJS");
+                        }}
+                        className="space-y-4"
+                      >
+                        <div>
+                          <label className="block text-[10px] font-bold tracking-widest text-[#a09078] uppercase mb-1.5">
+                            Nama Lengkap Calon Mempelai
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="Contoh: Ahmad & Fatimah"
+                            className="w-full border border-[#c9a84c]/20 text-[#1a1710] text-sm px-4 py-3 rounded-lg focus:border-[#c9a84c] bg-[#faf8f3]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold tracking-widest text-[#a09078] uppercase mb-1.5">
+                            Nomor WhatsApp
+                          </label>
+                          <input
+                            type="tel"
+                            required
+                            placeholder="+62 812-xxxx-xxxx"
+                            className="w-full border border-[#c9a84c]/20 text-[#1a1710] text-sm px-4 py-3 rounded-lg focus:border-[#c9a84c] bg-[#faf8f3]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold tracking-widest text-[#a09078] uppercase mb-1.5">
+                            Estimasi Tanggal Acara
+                          </label>
+                          <input
+                            type="date"
+                            className="w-full border border-[#c9a84c]/20 text-[#1a1710] text-sm px-4 py-3 rounded-lg focus:border-[#c9a84c] bg-[#faf8f3]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold tracking-widest text-[#a09078] uppercase mb-1.5">
+                            Pilihan Paket
+                          </label>
+                          <select className="w-full border border-[#c9a84c]/20 text-[#5a5040] text-sm px-4 py-3 rounded-lg focus:border-[#c9a84c] bg-[#faf8f3]">
+                            <option>Pilih paket...</option>
+                            <option>Paket Akad Nikah (Rp 5 Jt)</option>
+                            <option>Paket Resepsi (Rp 25 Jt)</option>
+                            <option>Paket Lengkap (Rp 45 Jt)</option>
+                            <option>Undangan Digital (Rp 350 Rb)</option>
+                            <option>Konsultasi Custom Venue</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold tracking-widest text-[#a09078] uppercase mb-1.5">
+                            Pesan / Catatan
+                          </label>
+                          <textarea
+                            rows={3}
+                            placeholder="Ceritakan impian & kebutuhan acara Anda..."
+                            className="w-full border border-[#c9a84c]/20 text-[#1a1710] text-sm px-4 py-3 rounded-lg focus:border-[#c9a84c] bg-[#faf8f3] resize-none"
+                          />
+                        </div>
+
+                        <button
+                          type="submit"
+                          className="w-full bg-[#c9a84c] hover:bg-[#b8902a] text-white font-extrabold text-[11px] tracking-widest uppercase py-4 rounded-lg shadow-md transition-colors cursor-pointer mt-2"
+                        >
+                          Kirim Permintaan Konsultasi
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ── FOOTER SECTION ── */}
+            <footer className="sect-dark border-t border-[#c9a84c]/15 py-12">
+              <div className="max-w-7xl mx-auto px-6 md:px-10">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src="/media/image/logo.png"
+                      alt="Masjid Jami Sosrohadisewoyo"
+                      className="h-12 w-auto"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap justify-center gap-6 text-[10px] font-bold tracking-widest uppercase text-[#9a927e]">
+                    <a href="#tentang-wedding" className="hover:text-[#c9a84c] transition-colors">Tentang</a>
+                    <a href="#ibadah-wedding" className="hover:text-[#c9a84c] transition-colors">Ibadah</a>
+                    <a href="#pernikahan-wedding" className="hover:text-[#c9a84c] transition-colors">Pernikahan</a>
+                    <a href="#undangan-wedding" className="hover:text-[#c9a84c] transition-colors">Undangan Digital</a>
+                    <a href="#galeri-wedding" className="hover:text-[#c9a84c] transition-colors">Galeri</a>
+                    <a href="#kontak-wedding" className="hover:text-[#c9a84c] transition-colors">Kontak</a>
+                  </div>
+
+                  <p className="text-[10px] text-[#7a7068] font-bold tracking-wider">
+                    © 2026 Masjid Jami Sosrohadisewoyo
+                  </p>
+                </div>
+
+                <div className="text-center mt-10">
+                  <div className="gold-line mb-5" />
+                  <p className="font-serif-wedding text-lg italic text-[#c9a84c] mb-1">
+                    بَارَكَ اللَّهُ لَكُمَا وَبَارَكَ عَلَيْكُمَا وَجَمَعَ بَيْنَكُمَا فِي خَيْرٍ
+                  </p>
+                  <p className="text-[11px] text-[#a09890] font-medium tracking-wider">
+                    "Semoga Allah memberkahi kalian berdua dan mengumpulkan kalian dalam kebaikan"
+                  </p>
+                  <p className="text-[10px] text-[#7a7068] mt-2 font-medium">
+                    Jl. Munginsidi No. 51 RT 011 RW 002 Pelem II, Desa Pelem, Ngawi, Kabupaten Ngawi
+                  </p>
+                </div>
+              </div>
+            </footer>
+
           </div>
         ) : currentView === "sewa-ruangan" ? (
           <div className="min-h-screen bg-[#FAFAFA] text-[#111827] pt-28 pb-20 font-sans">

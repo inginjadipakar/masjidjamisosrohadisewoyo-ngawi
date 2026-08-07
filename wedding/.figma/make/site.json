@@ -1,0 +1,10 @@
+{
+  "description": "Showcases a mosque's worship services and event hosting with elegant design and promotes digital wedding invitations for a seamless user experience.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
