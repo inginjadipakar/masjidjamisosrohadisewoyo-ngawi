@@ -759,6 +759,15 @@ export default function App() {
       if (hash === "#admin-tpa" || search.includes("view=admin-tpa") || search.includes("page=admin-tpa")) {
         setCurrentView("admin-tpa");
         window.scrollTo({ top: 0, behavior: "smooth" });
+      } else if (hash === "#tpa-daftar" || search.includes("view=tpa-daftar")) {
+        // Deep-link langsung ke Formulir Pendaftaran Murid Baru TPA MJS
+        setCurrentView("tpa-mjs");
+        setTimeout(() => {
+          const formEl = document.getElementById("form-pendaftaran");
+          if (formEl) {
+            formEl.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 400);
       } else if (hash === "#tpa-mjs" || hash === "#tpa" || search.includes("view=tpa")) {
         setCurrentView("tpa-mjs");
         window.scrollTo({ top: 0, behavior: "smooth" });
