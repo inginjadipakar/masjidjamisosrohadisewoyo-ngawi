@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Menu, X, ChevronDown, ChevronRight, ChevronLeft, ArrowRight, BookOpen, Users, Heart, Star, Wheat, Gift, Gem, Monitor, Handshake, ShoppingBag, Home, RefreshCw, Copy, Check, ShieldCheck, Sparkles, HandHeart, GraduationCap } from "lucide-react";
 import { gsap } from "gsap";
+import TpaProfilePage from "./components/tpa/TpaProfilePage";
+import TpaAdminPortal from "./components/tpa/TpaAdminPortal";
 
 /* ── Ticker & Floating Waterfall animation injected once ── */
 const tickerStyle = `
@@ -125,6 +127,7 @@ const navLinks: NavLinkItem[] = [
     label: "MJS Edukasi",
     hasDropdown: true,
     dropdownItems: [
+      { title: "TPA MJS QUR'ANIC TECH", badge: "Pendaftaran Dibuka" },
       { title: "MJS Edukasi — Overview" },
       { title: "Sains (Fisika & Matematika)" },
       { title: "Digital & AI" },
@@ -744,16 +747,34 @@ export default function App() {
   };
 
   const [activeMobileDropdown, setActiveMobileDropdown] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<"home" | "sewa-ruangan" | "mjs-edukasi" | "wedding-organizer">("home");
+  const [currentView, setCurrentView] = useState<"home" | "sewa-ruangan" | "mjs-edukasi" | "wedding-organizer" | "tpa-mjs" | "admin-tpa">("home");
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLightNavbar, setIsLightNavbar] = useState(false);
+
+  // Listener untuk URL Hash / Query (Akses Rahasia Admin Portal & Halaman TPA)
+  useEffect(() => {
+    const checkHashOrRoute = () => {
+      const hash = window.location.hash.toLowerCase();
+      const search = window.location.search.toLowerCase();
+      if (hash === "#admin-tpa" || search.includes("view=admin-tpa") || search.includes("page=admin-tpa")) {
+        setCurrentView("admin-tpa");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else if (hash === "#tpa-mjs" || hash === "#tpa" || search.includes("view=tpa")) {
+        setCurrentView("tpa-mjs");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    };
+    checkHashOrRoute();
+    window.addEventListener("hashchange", checkHashOrRoute);
+    return () => window.removeEventListener("hashchange", checkHashOrRoute);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
       setIsScrolled(scrollY > 20);
 
-      if (currentView === "sewa-ruangan" || currentView === "wedding-organizer") {
+      if (currentView === "sewa-ruangan" || currentView === "wedding-organizer" || currentView === "tpa-mjs" || currentView === "admin-tpa") {
         setIsLightNavbar(true);
         return;
       }
@@ -961,7 +982,7 @@ export default function App() {
       </div>
 
       {/* ─────────────── CLEAN DUAL-CARD OVERLAPPING DONATION POPUP ─────────────── */}
-      {showDonationPopup && (
+      {showDonationPopup && currentView !== "tpa-mjs" && currentView !== "admin-tpa" && (
         <div
           id="popup-backdrop"
           className="fixed inset-0 z-[100000] bg-black/60 backdrop-blur-md flex items-start justify-center p-3 sm:p-6 overflow-y-auto"
@@ -1184,6 +1205,7 @@ export default function App() {
         style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
       >
         {/* ─────────────── NAVBAR ─────────────── */}
+        {currentView !== "tpa-mjs" && currentView !== "admin-tpa" && (
         <nav
           className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
             !isScrolled && currentView === "home"
@@ -1244,6 +1266,12 @@ export default function App() {
                               }
                               if (item.title === "Wedding Organizer") {
                                 setCurrentView("wedding-organizer");
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                                return;
+                              }
+                              if (item.title === "TPA MJS QUR'ANIC TECH") {
+                                setCurrentView("tpa-mjs");
+                                window.location.hash = "tpa-mjs";
                                 window.scrollTo({ top: 0, behavior: "smooth" });
                                 return;
                               }
@@ -1365,6 +1393,12 @@ export default function App() {
                                 window.scrollTo({ top: 0, behavior: "smooth" });
                                 return;
                               }
+                              if (item.title === "TPA MJS QUR'ANIC TECH") {
+                                setCurrentView("tpa-mjs");
+                                window.location.hash = "tpa-mjs";
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                                return;
+                              }
                               if (item.title === "MJS Edukasi — Overview" || item.title === "Sains (Fisika & Matematika)" || item.title === "Digital & AI" || item.title === "Kesehatan (Health Talk)" || item.title === "Bisnis & Sales") {
                                 setCurrentView("mjs-edukasi");
                                 window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1402,9 +1436,36 @@ export default function App() {
             </div>
           )}
         </nav>
+        )}
 
-        {/* ─────────────── SEWA RUANGAN PAGE OR HOME ─────────────── */}
-        {currentView === "mjs-edukasi" ? (
+        {/* ─────────────── TPA MJS QUR'ANIC TECH OR ADMIN OR SEWA RUANGAN OR HOME ─────────────── */}
+        {currentView === "admin-tpa" ? (
+          <TpaAdminPortal
+            onBackToHome={() => {
+              setCurrentView("home");
+              window.location.hash = "";
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            onNavigateToPublicTpa={() => {
+              setCurrentView("tpa-mjs");
+              window.location.hash = "tpa-mjs";
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        ) : currentView === "tpa-mjs" ? (
+          <TpaProfilePage
+            onBackToHome={() => {
+              setCurrentView("home");
+              window.location.hash = "";
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            onNavigateToAdmin={() => {
+              setCurrentView("admin-tpa");
+              window.location.hash = "admin-tpa";
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        ) : currentView === "mjs-edukasi" ? (
           /* ═══════════════════════════════════════════════════════════════
              MJS EDUKASI — HALAMAN PENUH
           ═══════════════════════════════════════════════════════════════ */
@@ -3974,6 +4035,7 @@ export default function App() {
         )}
 
         {/* ─────────────── FOOTER ─────────────── */}
+        {currentView !== "tpa-mjs" && currentView !== "admin-tpa" && (
         <footer className="relative overflow-hidden">
           <div className="absolute inset-0">
             <img
@@ -4099,6 +4161,7 @@ export default function App() {
             </div>
           </div>
         </footer>
+        )}
       </div>
     </>
   );

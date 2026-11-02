@@ -1,3 +1,97 @@
 @import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
+
+/* ── Animasi Karakter Anak TPA (Film Jumbo Style) ── */
+@keyframes jumboFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-9px) rotate(1.2deg);
+  }
+}
+
+@keyframes jumboFloatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(-1deg);
+  }
+}
+
+@keyframes jumboBounceGentle {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.02);
+  }
+}
+
+@keyframes jumboWiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-3deg);
+  }
+  40% {
+    transform: rotate(3deg);
+  }
+  60% {
+    transform: rotate(-2deg);
+  }
+  80% {
+    transform: rotate(2deg);
+  }
+}
+
+@keyframes jumboPulseGlow {
+  0%, 100% {
+    filter: drop-shadow(0 10px 25px rgba(6, 78, 59, 0.25));
+  }
+  50% {
+    filter: drop-shadow(0 18px 35px rgba(200, 155, 60, 0.35));
+  }
+}
+
+@keyframes sparkleSpin {
+  0% {
+    transform: scale(0.8) rotate(0deg);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.25) rotate(180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8) rotate(360deg);
+    opacity: 0.6;
+  }
+}
+
+.animate-jumbo-float {
+  animation: jumboFloat 4.5s ease-in-out infinite;
+}
+
+.animate-jumbo-float-slow {
+  animation: jumboFloatSlow 6s ease-in-out infinite;
+}
+
+.animate-jumbo-bounce {
+  animation: jumboBounceGentle 3.5s ease-in-out infinite;
+}
+
+.animate-jumbo-wiggle {
+  animation: jumboWiggle 4s ease-in-out infinite;
+}
+
+.animate-jumbo-glow {
+  animation: jumboPulseGlow 3s ease-in-out infinite;
+}
+
+.animate-sparkle {
+  animation: sparkleSpin 4s linear infinite;
+}
