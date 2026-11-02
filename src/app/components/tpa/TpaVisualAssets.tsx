@@ -355,7 +355,7 @@ export const JumboFeatureGroupScene: React.FC<{
             <span className="text-amber-500 text-[11px] font-semibold">• Hafidz Cilik</span>
           </div>
           <p className="font-sans text-slate-700 text-xs sm:text-sm leading-snug">
-            "Alhamdulillah, di TPA MJS ngajinya tartil bersanad dan seru bareng robot cerdas!"
+            "Alhamdulillah, di TPA MJS ngajinya tartil bersanad dan belajarnya seru menyenangkan!"
           </p>
           <div className="hidden sm:block absolute -bottom-2 left-10 w-4 h-4 bg-white border-b border-r border-emerald-300 transform rotate-45" />
         </div>
@@ -374,29 +374,17 @@ export const JumboFeatureGroupScene: React.FC<{
         </div>
       </div>
 
-      {/* KARAKTER UTAMA 3D TRIO: CUTOUT TRANSPARAN MENYATU DENGAN HALAMAN (TANPA FRAME, TANPA BG) */}
+      {/* KARAKTER UTAMA: CUTOUT TRANSPARAN MENYATU DENGAN HALAMAN (TANPA FRAME, TANPA BG) */}
       <div className="relative w-full max-w-3xl flex flex-col items-center justify-center animate-jumbo-float">
         {/* Soft Ambient Ground Shadow Lembut di Bawah Karakter */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-4/5 h-10 rounded-full bg-emerald-950/20 blur-xl pointer-events-none transform scale-y-50" />
 
-        {/* Gambar Cutout Transparan PNG Trio Murid & Robot — TANPA FRAME / KOTAK */}
+        {/* Gambar Cutout Transparan PNG Murid Belajar Al-Qur'an — TANPA FRAME / KOTAK */}
         <img
           src="/media/tpa/jumbo_santri_group.png"
-          alt="Murid Cilik MJS Faiz, Robot Asisten, dan Murid Cilik Aisyah — Animasi Film Jumbo"
+          alt="Murid Cilik MJS Faiz dan Murid Cilik Aisyah Belajar Al-Qur'an"
           className="w-full max-h-[460px] sm:max-h-[520px] object-contain filter drop-shadow-[0_20px_35px_rgba(6,78,59,0.25)] select-none pointer-events-auto transform group-hover:scale-102 transition-transform duration-500"
         />
-
-        {/* Lencana Identitas Melayang di Bawah Karakter */}
-        <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:gap-3 z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#064E3B] text-emerald-100 text-xs font-bold shadow-lg border border-[#C89B3C]">
-            <span className="w-2 h-2 rounded-full bg-[#34D399] animate-ping" />
-            <span>Karakter Murid Cilik MJS Ngawi</span>
-          </div>
-          <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#C89B3C] text-slate-950 text-xs font-bold shadow-lg border border-amber-300">
-            <span>✨</span>
-            <span>Gaya Animasi 3D Film Jumbo Nusantara</span>
-          </div>
-        </div>
 
         {/* Tombol Aksi Cepat jika disediakan */}
         {onCtaClick && (

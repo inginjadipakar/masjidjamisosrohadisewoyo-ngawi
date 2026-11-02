@@ -967,7 +967,7 @@ export default function TpaAdminPortal({
               <div>
                 <div className="font-bold text-slate-600 text-[11px]">TPA MJS Qur'anic Tech</div>
                 <div className="text-[10px] mt-0.5">Jl. Monginsidi No. 51, RT 011/RW 002, Pelem II, Desa Pelem, Kec. Ngawi, Kab. Ngawi, Jawa Timur</div>
-                <div className="text-[10px] mt-0.5">Admin TPA: <a href="https://wa.me/6287894416915" className="text-emerald-600 font-semibold">087894416915</a></div>
+                <div className="text-[10px] mt-0.5">Admin TPA: Dadan Satria (<a href="https://wa.me/6287894416915" className="text-emerald-600 font-semibold">087894416915</a>)</div>
               </div>
             </div>
             <div className="text-right">

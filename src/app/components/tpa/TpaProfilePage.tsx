@@ -1205,7 +1205,7 @@ export default function TpaProfilePage({ onBackToHome, onNavigateToAdmin }: TpaP
             {/* Tombol Submit Kirim ke WA Admin */}
             <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-xs text-slate-600 font-medium">
-                🔒 Kerahasiaan data terjamin. Konfirmasi formulir langsung terhubung ke Layanan WhatsApp: <strong>0878-9441-6915</strong>.
+                Formulir langsung terhubung ke Admin MJS
               </div>
 
               <button
@@ -1269,19 +1269,22 @@ export default function TpaProfilePage({ onBackToHome, onNavigateToAdmin }: TpaP
                 </li>
                 <li className="flex items-center gap-3">
                   <Phone className="w-4 h-4 text-[#10B981] flex-shrink-0" />
-                  <span>Rizal / Admin: 087894416915</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Phone className="w-4 h-4 text-[#10B981] flex-shrink-0" />
-                  <span>Wignoyo: 0851 0046 5409</span>
+                  <span>Dadan Satria / Admin: 087894416915</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <Mail className="w-4 h-4 text-[#10B981] flex-shrink-0" />
-                  <span>edukasi@masjidsosrohadisewoyo.id</span>
+                  <span>mjsngawi@gmail.com</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <ExternalLink className="w-4 h-4 text-[#10B981] flex-shrink-0" />
-                  <span>www.masjidsosrohadisewoyo.id</span>
+                  <a
+                    href="https://masjidjamisosrohadisewoyo-ngawi.vercel.app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white transition-colors"
+                  >
+                    masjidjamisosrohadisewoyo-ngawi.vercel.app
+                  </a>
                 </li>
               </ul>
             </div>
@@ -1326,7 +1329,17 @@ export default function TpaProfilePage({ onBackToHome, onNavigateToAdmin }: TpaP
           </div>
 
           <div className="border-t border-slate-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-            <div>2026 | TPA MJS Qur'anic Tech — Masjid Jami Sosrohadisewoyo Ngawi.</div>
+            <div>
+              2026 | TPA MJS Qur'anic Tech — Masjid Jami Sosrohadisewoyo Ngawi. Dibuat oleh{" "}
+              <a
+                href="https://wa.me/628813224569"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#C89B3C] hover:text-amber-300 font-semibold underline transition-colors"
+              >
+                Dadan Satria
+              </a>
+            </div>
             <div className="flex items-center gap-4">
               <button
                 onClick={() => onBackToHome()}

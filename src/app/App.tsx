@@ -4153,7 +4153,15 @@ export default function App() {
 
             <div className="border-t border-white/10 pt-6 flex flex-col lg:flex-row justify-between items-center gap-3">
               <p className="text-white/25 text-xs font-medium">
-                © 2026 Masjid Jami Sosrohadisewoyo. Hak cipta dilindungi.
+                © 2026 Masjid Jami Sosrohadisewoyo. Hak cipta dilindungi. • Dibuat oleh{" "}
+                <a
+                  href="https://wa.me/628813224569"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[#C89B3C] hover:underline font-semibold"
+                >
+                  Dadan Satria
+                </a>
               </p>
               <p className="text-white/18 text-xs">
                 Dibangun dengan niat tulus untuk kemaslahatan umat.
