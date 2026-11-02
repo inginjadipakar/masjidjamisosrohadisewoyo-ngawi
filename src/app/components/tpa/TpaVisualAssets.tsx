@@ -255,7 +255,7 @@ export const JumboBoyCharacter: React.FC<{
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block" />
               Murid Cilik MJS
             </span>
-            <span className="text-amber-500 text-xs font-semibold">✨ Film Jumbo</span>
+            <span className="text-amber-500 text-xs font-semibold">✨ Hafidz Cilik MJS</span>
           </div>
           <p className="font-sans text-slate-700">{speech}</p>
           {/* Bubble tail */}
@@ -270,8 +270,8 @@ export const JumboBoyCharacter: React.FC<{
 
         {/* Gambar Cutout Transparan PNG Tanpa Frame Kotak */}
         <img
-          src="/media/tpa/jumbo_santri_boy.png"
-          alt="Murid Cilik MJS Faiz - Animasi Film Jumbo"
+          src="/media/tpa/murid_faiz_mjs.png"
+          alt="Murid Cilik MJS Faiz - Hafidz Cilik"
           className="w-full h-full object-contain filter drop-shadow-[0_16px_28px_rgba(0,0,0,0.22)] transform group-hover:scale-105 transition-transform duration-300 select-none pointer-events-auto"
         />
 
@@ -290,7 +290,7 @@ export const JumboGirlCharacter: React.FC<{
   size?: "sm" | "md" | "lg";
   className?: string;
 }> = ({
-  speech = "Bismillah! Di TPA MJS, belajar ngaji itu asyik dan punya banyak teman sholeh!",
+  speech = "Bismillah! Di TPA MJS, belajar ngaji itu asyik, tartil, dan punya banyak teman sholeh!",
   size = "md",
   className = "",
 }) => {
@@ -304,16 +304,16 @@ export const JumboGirlCharacter: React.FC<{
     <div className={`relative flex flex-col items-center group pointer-events-auto ${className}`}>
       {/* Speech Bubble */}
       {speech && (
-        <div className="mb-2 max-w-[260px] sm:max-w-[320px] bg-white rounded-2xl p-3 sm:p-4 shadow-xl border border-amber-300 text-slate-800 text-xs sm:text-sm font-medium leading-relaxed relative animate-jumbo-bounce select-none">
+        <div className="mb-2 max-w-[260px] sm:max-w-[320px] bg-white rounded-2xl p-3 sm:p-4 shadow-xl border border-emerald-300 text-slate-800 text-xs sm:text-sm font-medium leading-relaxed relative animate-jumbo-bounce select-none">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[#C89B3C] font-bold text-xs uppercase tracking-wider flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse inline-block" />
+            <span className="text-[#0F766E] font-bold text-xs uppercase tracking-wider flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block" />
               Murid Cilik MJS
             </span>
-            <span className="text-teal-600 text-xs font-semibold">💻 Qur'anic Tech</span>
+            <span className="text-[#C89B3C] text-xs font-semibold">📖 Generasi Qur'ani</span>
           </div>
           <p className="font-sans text-slate-700">{speech}</p>
-          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-b border-r border-amber-300 transform rotate-45" />
+          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-b border-r border-emerald-300 transform rotate-45" />
         </div>
       )}
 
@@ -324,14 +324,14 @@ export const JumboGirlCharacter: React.FC<{
 
         {/* Gambar Cutout Transparan PNG Tanpa Frame Kotak */}
         <img
-          src="/media/tpa/jumbo_santri_girl.png"
-          alt="Murid Cilik MJS Aisyah - Animasi Film Jumbo"
+          src="/media/tpa/murid_aisyah_mjs.png"
+          alt="Murid Cilik MJS Aisyah"
           className="w-full h-full object-contain filter drop-shadow-[0_16px_28px_rgba(0,0,0,0.22)] transform group-hover:scale-105 transition-transform duration-300 select-none pointer-events-auto"
         />
 
         {/* Lencana Nama Melayang Bebas di Bawah */}
         <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#0F766E] text-teal-100 text-[10px] sm:text-xs font-bold px-3 py-1 rounded-full shadow-lg border border-teal-300 whitespace-nowrap">
-          Murid Aisyah • Pintar IT
+          Murid Aisyah • MJS
         </div>
       </div>
     </div>
