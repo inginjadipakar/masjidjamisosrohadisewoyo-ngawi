@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ShieldCheck,
   Lock,
@@ -27,15 +27,23 @@ import {
   School,
   BookOpen,
   Sparkles,
-  ChevronDown,
   ClipboardList,
   Star,
+  Cloud,
+  Database,
+  Download,
+  Upload,
+  Send,
+  Copy,
 } from "lucide-react";
 import {
   TpaRegistration,
   getTpaRegistrations,
-  updateTpaStatus,
-  deleteTpaPermanently,
+  fetchTpaRegistrationsAsync,
+  updateTpaStatusAsync,
+  deleteTpaPermanentlyAsync,
+  importTpaRegistrations,
+  exportTpaToJson,
   exportTpaToCsv,
   exportTpaToPdf,
 } from "./tpaData";
@@ -68,17 +76,67 @@ export default function TpaAdminPortal({
   const [selectedDetail, setSelectedDetail] = useState<TpaRegistration | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<TpaRegistration | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [toastType, setToastType] = useState<"success" | "error">("success");
+  const [toastType, setToastType] = useState<"success" | "error" | "info">("success");
 
-  // Load data
-  const loadData = () => {
-    const data = getTpaRegistrations();
-    setRegistrations(data);
+  // Cloud Sync state
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncSource, setSyncSource] = useState<"cloud" | "cache">("cloud");
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
+
+  // Backup & Import Modal
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importJsonText, setImportJsonText] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load data function (Hybrid: Local Cache first, then Cloud Sync)
+  const loadData = async (manualTrigger: boolean = false) => {
+    // 1. Tampilkan local cache langsung (instan, 0 ms lag)
+    const local = getTpaRegistrations();
+    if (!manualTrigger && registrations.length === 0) {
+      setRegistrations(local);
+    }
+
+    // 2. Fetch fresh data dari server cloud
+    setIsSyncing(true);
+    try {
+      const result = await fetchTpaRegistrationsAsync();
+      setRegistrations(result.data);
+      setSyncSource(result.source);
+      const nowStr = new Date().toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+      setLastSyncedAt(nowStr);
+
+      if (manualTrigger) {
+        showToast(
+          result.source === "cloud"
+            ? `Sinkronisasi cloud berhasil (${result.data.length} data murid).`
+            : "Terhubung ke cache lokal (offline).",
+          "success"
+        );
+      }
+    } catch (e) {
+      console.warn("Gagal sinkronisasi data cloud:", e);
+      if (manualTrigger) {
+        showToast("Gagal terhubung ke server cloud. Menggunakan data lokal.", "error");
+      }
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   useEffect(() => {
     if (isAuthenticated) {
       loadData();
+
+      // Auto-poll cloud setiap 25 detik agar pendaftaran baru dari wali murid langsung masuk
+      const pollTimer = setInterval(() => {
+        loadData(false);
+      }, 25000);
+
+      return () => clearInterval(pollTimer);
     }
   }, [isAuthenticated]);
 
@@ -89,7 +147,7 @@ export default function TpaAdminPortal({
     return () => clearTimeout(timer);
   }, [toastMessage]);
 
-  const showToast = (msg: string, type: "success" | "error" = "success") => {
+  const showToast = (msg: string, type: "success" | "error" | "info" = "success") => {
     setToastType(type);
     setToastMessage(msg);
   };
@@ -99,10 +157,9 @@ export default function TpaAdminPortal({
     setLoginError("");
     setIsLoggingIn(true);
 
-    // Simulate brief auth delay for UX
-    await new Promise((r) => setTimeout(r, 600));
+    await new Promise((r) => setTimeout(r, 500));
 
-    const validUsernames = ["admin", "admin_tpa", "mjs"];
+    const validUsernames = ["admin", "admin_tpa", "mjs", "dadan"];
     const validPasswords = ["tpa2026", "mjs2026", "admin123"];
 
     if (
@@ -111,7 +168,7 @@ export default function TpaAdminPortal({
     ) {
       sessionStorage.setItem("tpa_admin_auth", "true");
       setIsAuthenticated(true);
-      loadData();
+      loadData(true);
       showToast("Ahlan wa sahlan! Berhasil masuk ke Portal Admin TPA MJS.");
     } else {
       setLoginError("Kredensial tidak valid. Gunakan tombol 'Isi Cepat' untuk akses demo.");
@@ -132,30 +189,98 @@ export default function TpaAdminPortal({
     setPassword("");
   };
 
-  const handleStatusChange = (id: string, newStatus: "Pending" | "ACC") => {
-    const updated = updateTpaStatus(id, newStatus);
+  const handleStatusChange = async (id: string, newStatus: "Pending" | "ACC") => {
+    const updated = await updateTpaStatusAsync(id, newStatus);
     setRegistrations(updated);
+
     if (selectedDetail && selectedDetail.id === id) {
-      setSelectedDetail({ ...selectedDetail, status: newStatus });
+      setSelectedDetail({
+        ...selectedDetail,
+        status: newStatus,
+        approvedAt: newStatus === "ACC" ? new Date().toISOString() : undefined,
+      });
     }
-    showToast(
-      newStatus === "ACC"
-        ? `Pendaftaran [${id}] telah disetujui (ACC). ✓`
-        : `Status [${id}] dikembalikan ke Pending.`
-    );
+
+    if (newStatus === "ACC") {
+      const student = updated.find((it) => it.id === id);
+      showToast(
+        `Pendaftaran [${id}] telah di-ACC! Anda dapat mengirim konfirmasi resmi ke WhatsApp wali.`,
+        "success"
+      );
+    } else {
+      showToast(`Status [${id}] dikembalikan ke Pending.`, "info");
+    }
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
     const id = deleteTarget.id;
     const nama = deleteTarget.namaLengkap;
-    const updated = deleteTpaPermanently(id);
+    const updated = await deleteTpaPermanentlyAsync(id);
     setRegistrations(updated);
     setDeleteTarget(null);
+
     if (selectedDetail && selectedDetail.id === id) {
       setSelectedDetail(null);
     }
-    showToast(`Data ${nama} (${id}) telah dihapus permanen.`, "error");
+    showToast(`Data ${nama} (${id}) telah dihapus dari sistem.`, "error");
+  };
+
+  // Helper kirim pesan resmi penerimaan murid baru ke WhatsApp wali murid
+  const handleSendAccWhatsApp = (student: TpaRegistration) => {
+    const cleanWa = student.whatsappOrtu.replace(/\D/g, "");
+    const formattedWa = cleanWa.startsWith("0") ? "62" + cleanWa.slice(1) : cleanWa;
+
+    const pesanAcc =
+      `*PEMBERITAHUAN HASIL SELEKSI PENDAFTARAN TPA MJS QUR'ANIC TECH*\n` +
+      `Masjid Jami Sosrohadisewoyo Ngawi · Tahun Ajaran 2026/2027\n` +
+      `-----------------------------------------\n\n` +
+      `Assalamu'alaikum Warahmatullahi Wabarakatuh.\n\n` +
+      `Kepada Yth. Bapak/Ibu Wali dari Ananda:\n` +
+      `Nama Murid: *${student.namaLengkap}* (${student.namaPanggilan})\n` +
+      `No. Registrasi: *${student.id}*\n\n` +
+      `Alhamdulillah, dengan penuh rasa syukur, kami menginformasikan bahwa pendaftaran Ananda dinyatakan *DITERIMA (ACC)* di program:\n` +
+      `📖 *${student.programPilihan}*\n` +
+      `⏰ *${student.jadwalShift}*\n\n` +
+      `Jadwal temu orientasi wali murid dan pembagian sarana mengaji akan kami informasikan lebih lanjut melalui grup koordinasi.\n\n` +
+      `Jika ada pertanyaan, silakan hubungi Sekretariat TPA MJS di 0878-9441-6915 (Dadan Satria).\n\n` +
+      `Jazakumullah khairan katsiran atas kepercayaan Bapak/Ibu.\n` +
+      `Wassalamu'alaikum Warahmatullahi Wabarakatuh.\n\n` +
+      `_Pengurus & Asatidz TPA MJS Qur'anic Tech_`;
+
+    const waUrl = `https://wa.me/${formattedWa}?text=${encodeURIComponent(pesanAcc)}`;
+    window.open(waUrl, "_blank", "noopener,noreferrer");
+  };
+
+  // Helper proses import JSON
+  const handleImportSubmit = async () => {
+    try {
+      const parsed = JSON.parse(importJsonText);
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        alert("Format JSON tidak valid atau data kosong. Harus berupa array objek murid.");
+        return;
+      }
+      const success = await importTpaRegistrations(parsed);
+      if (success) {
+        setRegistrations(parsed);
+        setIsImportModalOpen(false);
+        setImportJsonText("");
+        showToast(`Berhasil memulihkan ${parsed.length} data murid dari cadangan!`, "success");
+      }
+    } catch (e: any) {
+      alert("Gagal membaca JSON: " + e.message);
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      setImportJsonText(text);
+    };
+    reader.readAsText(file);
   };
 
   // Filter & Search logic
@@ -173,6 +298,7 @@ export default function TpaAdminPortal({
       (item.sekolahAsal && item.sekolahAsal.toLowerCase().includes(q)) ||
       (item.kemampuanNgaji && item.kemampuanNgaji.toLowerCase().includes(q)) ||
       (item.programPilihan && item.programPilihan.toLowerCase().includes(q)) ||
+      (item.jadwalShift && item.jadwalShift.toLowerCase().includes(q)) ||
       item.id.toLowerCase().includes(q);
 
     return matchesFilter && matchesSearch;
@@ -188,7 +314,7 @@ export default function TpaAdminPortal({
     exportTpaToPdf([student], student.status);
   };
 
-  // Format date helper
+  // Format date helpers
   const formatTanggal = (isoStr: string) => {
     try {
       return new Date(isoStr).toLocaleDateString("id-ID", {
@@ -217,7 +343,6 @@ export default function TpaAdminPortal({
 
   const formatTanggalLahir = (dateStr: string) => {
     try {
-      // Parse YYYY-MM-DD directly to avoid timezone issues
       const [year, month, day] = dateStr.split("-").map(Number);
       const d = new Date(year, month - 1, day);
       return d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
@@ -232,8 +357,8 @@ export default function TpaAdminPortal({
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#060E1A] flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden font-sans">
-        {/* Background Islamic geometry */}
-        <div className="absolute inset-0 opacity-[0.03]"
+        <div
+          className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M30 0l8.66 5v10L30 20l-8.66-5V5zm0 40l8.66 5v10L30 60l-8.66-5V45z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           }}
@@ -242,7 +367,6 @@ export default function TpaAdminPortal({
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#C89B3C]/8 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="max-w-md w-full bg-[#0B1628]/95 backdrop-blur-xl border border-white/8 rounded-3xl p-7 sm:p-9 shadow-2xl relative z-10 text-white">
-          {/* Logo & Header */}
           <div className="text-center mb-8">
             <div className="relative w-20 h-20 mx-auto mb-5">
               <div className="absolute inset-0 rounded-full bg-[#C89B3C]/20 blur-md" />
@@ -323,7 +447,6 @@ export default function TpaAdminPortal({
               </div>
             </div>
 
-            {/* Quick Demo Autofill */}
             <div className="flex items-center justify-between bg-white/3 p-3 rounded-xl border border-white/8 text-xs">
               <div>
                 <span className="text-slate-500 text-[10px] block mb-0.5">Akses Demo Pengurus:</span>
@@ -382,18 +505,23 @@ export default function TpaAdminPortal({
       {/* Toast Notification */}
       {toastMessage && (
         <div
-          className={`fixed bottom-6 right-4 left-4 sm:left-auto sm:right-6 sm:max-w-sm z-50 px-5 py-3.5 rounded-2xl shadow-2xl text-xs sm:text-sm flex items-center gap-3 border transition-all
-            ${toastType === "error"
-              ? "bg-slate-900 text-white border-rose-500/30"
-              : "bg-slate-900 text-white border-emerald-500/30"
+          className={`fixed bottom-6 right-4 left-4 sm:left-auto sm:right-6 sm:max-w-md z-50 px-5 py-3.5 rounded-2xl shadow-2xl text-xs sm:text-sm flex items-center gap-3 border transition-all
+            ${
+              toastType === "error"
+                ? "bg-slate-900 text-white border-rose-500/30"
+                : toastType === "info"
+                ? "bg-slate-900 text-white border-sky-500/30"
+                : "bg-slate-900 text-white border-emerald-500/30"
             }`}
         >
           {toastType === "error" ? (
             <AlertTriangle className="w-5 h-5 text-rose-400 flex-shrink-0" />
+          ) : toastType === "info" ? (
+            <Clock className="w-5 h-5 text-sky-400 flex-shrink-0" />
           ) : (
             <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
           )}
-          <span className="flex-1">{toastMessage}</span>
+          <span className="flex-1 leading-snug">{toastMessage}</span>
           <button
             onClick={() => setToastMessage(null)}
             className="text-slate-500 hover:text-white transition-colors cursor-pointer ml-1 flex-shrink-0"
@@ -423,8 +551,14 @@ export default function TpaAdminPortal({
                   QUR'ANIC TECH
                 </span>
               </div>
-              <div className="text-[10px] text-slate-400 truncate">
-                Jl. Monginsidi No. 51, Pelem, Ngawi
+              <div className="text-[10px] text-slate-400 truncate flex items-center gap-2">
+                <span>Masjid Jami Sosrohadisewoyo Ngawi</span>
+                <span className="text-slate-600">·</span>
+                {/* Real-time Cloud Indicator */}
+                <span className="inline-flex items-center gap-1 text-emerald-400 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  {syncSource === "cloud" ? "Cloud Real-time" : "Cache Lokal"}
+                </span>
               </div>
             </div>
           </div>
@@ -452,7 +586,58 @@ export default function TpaAdminPortal({
       </header>
 
       {/* ── MAIN CONTENT ── */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-7">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        {/* Cloud Connection & Status Banner */}
+        <div className="mb-6 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div
+              className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                syncSource === "cloud"
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-amber-100 text-amber-700"
+              }`}
+            >
+              <Cloud className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-sm text-slate-900">
+                  {syncSource === "cloud"
+                    ? "Server Cloud Terhubung (Real-time)"
+                    : "Penyimpanan Lokal (Offline Cache)"}
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Live Auto-Sync
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Pendaftaran baru dari wali murid otomatis masuk ke tabel ini secara real-time.
+                {lastSyncedAt && ` (Pembaruan terakhir: ${lastSyncedAt} WIB)`}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap self-start md:self-auto">
+            <button
+              onClick={() => loadData(true)}
+              disabled={isSyncing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+              title="Sinkronkan data dengan server cloud sekarang"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin text-emerald-600" : ""}`} />
+              <span>{isSyncing ? "Menyinkronkan..." : "Sinkronkan Sekarang"}</span>
+            </button>
+
+            <button
+              onClick={() => setIsImportModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+              title="Cadangan & Pemulihan Database"
+            >
+              <Database className="w-3.5 h-3.5 text-[#C89B3C]" />
+              <span>Cadangan DB</span>
+            </button>
+          </div>
+        </div>
 
         {/* Page Title + Progress */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -461,17 +646,18 @@ export default function TpaAdminPortal({
               className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight"
               style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
             >
-              Manajemen Pendaftaran Murid
+              Manajemen Pendaftaran Murid Baru
             </h1>
             <p className="text-slate-500 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed">
-              Data disimpan secara persisten di perangkat ini. Konfirmasi penerimaan murid langsung ke WhatsApp wali.
+              TPA MJS Qur'anic Tech · Masjid Jami Sosrohadisewoyo Ngawi. Konfirmasi persetujuan (ACC) langsung mengirim surat resmi ke WhatsApp wali.
             </p>
           </div>
-          {/* Approval Progress */}
+
+          {/* Approval Progress Card */}
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 flex-shrink-0 self-start">
             <div>
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                Tingkat Persetujuan
+                Tingkat Persetujuan (ACC)
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-28 h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -512,7 +698,7 @@ export default function TpaAdminPortal({
                 Menunggu ACC
               </span>
               <div className="text-3xl sm:text-4xl font-black text-amber-600">{countPending}</div>
-              <span className="hidden sm:block text-[11px] text-amber-700/70 mt-0.5">Perlu konfirmasi WA</span>
+              <span className="hidden sm:block text-[11px] text-amber-700/70 mt-0.5">Perlu konfirmasi pengurus</span>
             </div>
             <div className="hidden sm:flex w-11 h-11 rounded-xl bg-amber-100 items-center justify-center">
               <Clock className="w-5 h-5 text-amber-600" />
@@ -526,7 +712,7 @@ export default function TpaAdminPortal({
                 Disetujui (ACC)
               </span>
               <div className="text-3xl sm:text-4xl font-black text-emerald-700">{countAcc}</div>
-              <span className="hidden sm:block text-[11px] text-emerald-700 mt-0.5">Siap masuk kelas</span>
+              <span className="hidden sm:block text-[11px] text-emerald-700 mt-0.5">Siap masuk kelas TPA</span>
             </div>
             <div className="hidden sm:flex w-11 h-11 rounded-xl bg-emerald-100 items-center justify-center">
               <CheckCircle2 className="w-5 h-5 text-emerald-600" />
@@ -563,7 +749,7 @@ export default function TpaAdminPortal({
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Cari nama, wali, no. WA, program, atau ID..."
+                placeholder="Cari nama murid, orang tua, no WA, program, shift, atau ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-9 py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all bg-slate-50 focus:bg-white"
@@ -581,11 +767,13 @@ export default function TpaAdminPortal({
 
           {/* Row 2: Export Buttons */}
           <div className="flex items-center gap-2 flex-wrap border-t border-slate-100 pt-3">
-            <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mr-1 hidden sm:block">Ekspor:</span>
+            <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mr-1 hidden sm:block">
+              Ekspor:
+            </span>
             <button
               onClick={() => exportTpaToCsv(filteredData)}
               className="flex items-center gap-1.5 bg-[#064E3B] hover:bg-[#08634b] active:scale-95 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm cursor-pointer"
-              title="Download sebagai Excel (CSV)"
+              title="Download format Microsoft Excel (CSV)"
             >
               <FileSpreadsheet className="w-4 h-4 text-emerald-300" />
               <span>Export Excel</span>
@@ -594,21 +782,28 @@ export default function TpaAdminPortal({
             <button
               onClick={() => exportTpaToPdf(filteredData, filterStatus)}
               className="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm cursor-pointer"
-              title="Cetak laporan PDF resmi"
+              title="Cetak laporan PDF resmi dengan Kop Takmir MJS"
             >
               <Printer className="w-4 h-4 text-rose-200" />
               <span>Cetak PDF</span>
             </button>
 
             <button
-              onClick={() => {
-                loadData();
-                showToast("Data berhasil diperbarui.");
-              }}
-              className="p-2 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors cursor-pointer ml-auto"
-              title="Muat Ulang Data"
+              onClick={() => exportTpaToJson(registrations)}
+              className="flex items-center gap-1.5 bg-slate-700 hover:bg-slate-800 active:scale-95 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm cursor-pointer"
+              title="Cadangkan seluruh database dalam format JSON"
             >
-              <RefreshCw className="w-4 h-4" />
+              <Download className="w-4 h-4 text-slate-300" />
+              <span>Backup JSON</span>
+            </button>
+
+            <button
+              onClick={() => loadData(true)}
+              disabled={isSyncing}
+              className="p-2 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors cursor-pointer ml-auto disabled:opacity-50"
+              title="Muat Ulang / Sinkronkan Data"
+            >
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? "animate-spin text-emerald-600" : ""}`} />
             </button>
 
             {filteredData.length > 0 && (
@@ -627,20 +822,21 @@ export default function TpaAdminPortal({
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-slate-400 uppercase tracking-widest text-[10px] font-bold">
-                  <th className="py-3.5 px-4 w-12 text-center">No</th>
-                  <th className="py-3.5 px-4">Calon Murid</th>
-                  <th className="py-3.5 px-4">Usia & Sekolah</th>
-                  <th className="py-3.5 px-4">Program & Shift</th>
-                  <th className="py-3.5 px-4">Orang Tua / Wali</th>
-                  <th className="py-3.5 px-4">Daftar</th>
-                  <th className="py-3.5 px-4 text-center">Status</th>
-                  <th className="py-3.5 px-4 text-center">Aksi</th>
+                  <th className="py-3.5 px-3 w-10 text-center">No</th>
+                  <th className="py-3.5 px-4 min-w-[190px]">Calon Murid</th>
+                  <th className="py-3.5 px-4 min-w-[130px]">Usia & Sekolah</th>
+                  <th className="py-3.5 px-4 min-w-[170px]">Program Pilihan</th>
+                  <th className="py-3.5 px-4 min-w-[150px]">Shift Belajar</th>
+                  <th className="py-3.5 px-4 min-w-[130px]">Kemampuan Ngaji</th>
+                  <th className="py-3.5 px-4 min-w-[150px]">Orang Tua / Wali</th>
+                  <th className="py-3.5 px-3 text-center">Status</th>
+                  <th className="py-3.5 px-4 text-center min-w-[170px]">Aksi & Komunikasi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-16 text-center">
+                    <td colSpan={9} className="py-16 text-center">
                       <div className="max-w-xs mx-auto">
                         <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
                           <ClipboardList className="w-8 h-8 text-slate-300" />
@@ -651,7 +847,7 @@ export default function TpaAdminPortal({
                         <p className="text-xs text-slate-400 mb-3 leading-relaxed">
                           {searchQuery
                             ? `Tidak ada murid yang cocok dengan "${searchQuery}".`
-                            : "Data pendaftaran murid akan muncul di sini setelah formulir dikirimkan."}
+                            : "Data pendaftaran murid baru akan otomatis muncul di sini begitu formulir diisi."}
                         </p>
                         {searchQuery && (
                           <button
@@ -666,29 +862,36 @@ export default function TpaAdminPortal({
                   </tr>
                 ) : (
                   filteredData.map((item, idx) => (
-                    <tr
-                      key={item.id}
-                      className="hover:bg-slate-50/80 transition-colors group"
-                    >
+                    <tr key={item.id} className="hover:bg-slate-50/80 transition-colors group">
                       {/* No */}
-                      <td className="py-4 px-4 text-center text-slate-400 font-medium">{idx + 1}</td>
+                      <td className="py-3.5 px-3 text-center text-slate-400 font-medium">{idx + 1}</td>
 
                       {/* Calon Murid */}
-                      <td className="py-4 px-4">
-                        <div className="font-bold text-slate-900 text-sm leading-tight">{item.namaLengkap}</div>
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold text-slate-900 text-sm leading-tight">
+                          {item.namaLengkap}
+                        </div>
                         <div className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5 flex-wrap">
-                          <span className="font-mono text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{item.id}</span>
+                          <span className="font-mono text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                            {item.id}
+                          </span>
                           <span className="text-slate-300">·</span>
-                          <span>Panggilan: <strong className="text-slate-700">{item.namaPanggilan}</strong></span>
+                          <span>
+                            Panggilan: <strong className="text-slate-700">{item.namaPanggilan}</strong>
+                          </span>
                           <span className="text-slate-300">·</span>
-                          <span className={`font-semibold ${item.jenisKelamin === "Laki-laki" ? "text-sky-600" : "text-rose-500"}`}>
+                          <span
+                            className={`font-semibold ${
+                              item.jenisKelamin === "Laki-laki" ? "text-sky-600" : "text-rose-500"
+                            }`}
+                          >
                             {item.jenisKelamin}
                           </span>
                         </div>
                       </td>
 
                       {/* Usia & Sekolah */}
-                      <td className="py-4 px-4">
+                      <td className="py-3.5 px-4">
                         <div className="font-semibold text-slate-800">{item.usia} Tahun</div>
                         <div className="text-[11px] text-slate-500 mt-0.5 leading-snug">
                           {item.sekolahAsal || "—"}
@@ -696,23 +899,45 @@ export default function TpaAdminPortal({
                         <div className="text-[10px] text-slate-400">{item.kelasSekolah}</div>
                       </td>
 
-                      {/* Program & Shift */}
-                      <td className="py-4 px-4">
-                        <div className="text-[11px] font-semibold text-teal-800 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-lg inline-block max-w-[180px] leading-snug mb-1">
-                          {item.kemampuanNgaji}
-                        </div>
-                        <div className="text-[10px] text-slate-400 leading-snug">
-                          {item.jadwalShift?.replace(" WIB", "") || "—"}
+                      {/* Program Pilihan (Fixed & Clear) */}
+                      <td className="py-3.5 px-4">
+                        <div className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-900 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg leading-snug">
+                          <BookOpen className="w-3 h-3 text-emerald-600 flex-shrink-0" />
+                          <span>{item.programPilihan}</span>
                         </div>
                       </td>
 
+                      {/* Shift Belajar */}
+                      <td className="py-3.5 px-4">
+                        <div className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
+                          <Calendar className="w-3 h-3 text-slate-500" />
+                          <span>{item.jadwalShift?.replace(" WIB", "") || "—"}</span>
+                        </div>
+                      </td>
+
+                      {/* Kemampuan Ngaji */}
+                      <td className="py-3.5 px-4">
+                        <span className="inline-block text-[11px] font-semibold text-teal-800 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-md">
+                          {item.kemampuanNgaji}
+                        </span>
+                      </td>
+
                       {/* Orang Tua & WA */}
-                      <td className="py-4 px-4">
+                      <td className="py-3.5 px-4">
                         <div className="font-semibold text-slate-800 text-[12px]">
-                          {item.namaAyah ? `Bpk. ${item.namaAyah}` : item.namaIbu ? `Ibu ${item.namaIbu}` : "—"}
+                          {item.namaAyah
+                            ? `Bpk. ${item.namaAyah}`
+                            : item.namaIbu
+                            ? `Ibu ${item.namaIbu}`
+                            : "—"}
                         </div>
                         <a
-                          href={`https://wa.me/${item.whatsappOrtu.replace(/\D/g, "")}?text=Assalamualaikum%20Bapak%2FIbu%2C%20kami%20dari%20Pengurus%20TPA%20MJS%20Qur%27anic%20Tech%20ingin%20mengonfirmasi%20pendaftaran%20ananda%20*${encodeURIComponent(item.namaLengkap)}*.`}
+                          href={`https://wa.me/${item.whatsappOrtu.replace(
+                            /\D/g,
+                            ""
+                          )}?text=Assalamualaikum%20Bapak%2FIbu%2C%20kami%20dari%20Pengurus%20TPA%20MJS%20Qur%27anic%20Tech%20mengonfirmasi%20pendaftaran%20ananda%20*${encodeURIComponent(
+                            item.namaLengkap
+                          )}*.`}
                           target="_blank"
                           rel="noreferrer"
                           className="inline-flex items-center gap-1 text-[11px] text-emerald-700 hover:text-emerald-900 font-semibold mt-0.5 hover:underline"
@@ -722,13 +947,8 @@ export default function TpaAdminPortal({
                         </a>
                       </td>
 
-                      {/* Tanggal Daftar */}
-                      <td className="py-4 px-4">
-                        <div className="text-[11px] text-slate-500">{formatTanggalShort(item.createdAt)}</div>
-                      </td>
-
                       {/* Status Badge */}
-                      <td className="py-4 px-4 text-center">
+                      <td className="py-3.5 px-3 text-center">
                         <span
                           className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold ${
                             item.status === "ACC"
@@ -741,14 +961,15 @@ export default function TpaAdminPortal({
                         </span>
                       </td>
 
-                      {/* Aksi */}
-                      <td className="py-4 px-4">
-                        <div className="flex items-center justify-center gap-1.5">
+                      {/* Aksi & Komunikasi */}
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                          {/* Toggle Status ACC / Pending */}
                           {item.status === "Pending" ? (
                             <button
                               onClick={() => handleStatusChange(item.id, "ACC")}
-                              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition-colors cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
-                              title="Setujui (ACC)"
+                              className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition-colors cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
+                              title="Setujui Pendaftaran (ACC)"
                             >
                               <Check className="w-3 h-3" />
                               <span>ACC</span>
@@ -756,26 +977,40 @@ export default function TpaAdminPortal({
                           ) : (
                             <button
                               onClick={() => handleStatusChange(item.id, "Pending")}
-                              className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] transition-colors cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
-                              title="Kembalikan ke Pending"
+                              className="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] transition-colors cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
+                              title="Kembalikan ke status Pending"
                             >
                               <Clock className="w-3 h-3" />
                               <span>Pending</span>
                             </button>
                           )}
 
+                          {/* Tombol Kirim Pesan Resmi ACC via WhatsApp */}
+                          {item.status === "ACC" && (
+                            <button
+                              onClick={() => handleSendAccWhatsApp(item)}
+                              className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 transition-colors cursor-pointer flex items-center gap-1"
+                              title="Kirim Surat Penerimaan Resmi ke WhatsApp Wali Murid"
+                            >
+                              <Send className="w-3.5 h-3.5" />
+                              <span className="text-[10px] font-bold">Surat WA</span>
+                            </button>
+                          )}
+
+                          {/* Detail Modal */}
                           <button
                             onClick={() => setSelectedDetail(item)}
                             className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
-                            title="Lihat Detail Lengkap"
+                            title="Lihat Formulir Lengkap"
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </button>
 
+                          {/* Hapus */}
                           <button
                             onClick={() => setDeleteTarget(item)}
                             className="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-500 transition-colors cursor-pointer"
-                            title="Hapus Permanen"
+                            title="Hapus Data Permanen"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -799,12 +1034,12 @@ export default function TpaAdminPortal({
                 <ClipboardList className="w-8 h-8 text-slate-300" />
               </div>
               <p className="font-semibold text-slate-600 text-sm mb-1">
-                {searchQuery ? "Tidak ada hasil" : "Belum ada data"}
+                {searchQuery ? "Tidak ada hasil pencarian" : "Belum ada data pendaftaran"}
               </p>
               <p className="text-xs text-slate-400 leading-relaxed">
                 {searchQuery
                   ? `Tidak ada murid yang cocok dengan "${searchQuery}".`
-                  : "Data akan muncul setelah formulir pendaftaran dikirim."}
+                  : "Data murid akan muncul begitu formulir pendaftaran dikirim."}
               </p>
               {searchQuery && (
                 <button
@@ -845,17 +1080,36 @@ export default function TpaAdminPortal({
 
                 {/* Card Body */}
                 <div className="px-4 py-3">
-                  {/* Nama */}
                   <div className="mb-2.5">
-                    <h3 className="font-bold text-base text-slate-900 leading-tight">{item.namaLengkap}</h3>
+                    <h3 className="font-bold text-base text-slate-900 leading-tight">
+                      {item.namaLengkap}
+                    </h3>
                     <div className="text-xs text-slate-400 mt-0.5 flex flex-wrap gap-1.5">
                       <span className="font-medium text-slate-600">{item.namaPanggilan}</span>
                       <span>·</span>
-                      <span className={item.jenisKelamin === "Laki-laki" ? "text-sky-600 font-semibold" : "text-rose-500 font-semibold"}>
+                      <span
+                        className={
+                          item.jenisKelamin === "Laki-laki"
+                            ? "text-sky-600 font-semibold"
+                            : "text-rose-500 font-semibold"
+                        }
+                      >
                         {item.jenisKelamin}
                       </span>
                       <span>·</span>
                       <span>{item.usia} Tahun</span>
+                    </div>
+                  </div>
+
+                  {/* Program & Shift Highlight */}
+                  <div className="bg-emerald-50/80 border border-emerald-200 rounded-xl p-2.5 mb-2.5 text-xs">
+                    <div className="text-[10px] text-emerald-800 font-bold uppercase tracking-wider mb-0.5">
+                      Program Terpilih
+                    </div>
+                    <div className="font-bold text-emerald-950 text-xs">{item.programPilihan}</div>
+                    <div className="text-[11px] text-emerald-700 mt-0.5 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      <span>{item.jadwalShift}</span>
                     </div>
                   </div>
 
@@ -870,6 +1124,7 @@ export default function TpaAdminPortal({
                       </div>
                       <div className="text-[10px] text-slate-400">{item.kelasSekolah}</div>
                     </div>
+
                     <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
                       <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1 flex items-center gap-1">
                         <BookOpen className="w-3 h-3" /> Kemampuan
@@ -878,34 +1133,25 @@ export default function TpaAdminPortal({
                         {item.kemampuanNgaji}
                       </div>
                     </div>
-                    <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
-                      <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1 flex items-center gap-1">
-                        <Calendar className="w-3 h-3" /> Shift
-                      </div>
-                      <div className="font-semibold text-slate-700 text-[11px] leading-snug">
-                        {item.jadwalShift?.replace(" WIB", "") || "—"}
-                      </div>
-                    </div>
-                    <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
-                      <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
-                        Daftar
-                      </div>
-                      <div className="font-semibold text-slate-700 text-[11px]">
-                        {formatTanggalShort(item.createdAt)}
-                      </div>
-                    </div>
                   </div>
 
                   {/* Wali & WA */}
                   <div className="flex items-center justify-between bg-slate-50 rounded-xl p-2.5 border border-slate-100 mb-3">
                     <div>
-                      <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Wali Murid</div>
+                      <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">
+                        Wali Murid
+                      </div>
                       <div className="font-semibold text-slate-800 text-xs">
                         {item.namaAyah ? `Bpk. ${item.namaAyah}` : item.namaIbu ? `Ibu ${item.namaIbu}` : "—"}
                       </div>
                     </div>
                     <a
-                      href={`https://wa.me/${item.whatsappOrtu.replace(/\D/g, "")}?text=Assalamualaikum%20Bapak%2FIbu%2C%20kami%20dari%20Pengurus%20TPA%20MJS%20Qur%27anic%20Tech%20mengonfirmasi%20pendaftaran%20ananda%20*${encodeURIComponent(item.namaLengkap)}*.`}
+                      href={`https://wa.me/${item.whatsappOrtu.replace(
+                        /\D/g,
+                        ""
+                      )}?text=Assalamualaikum%20Bapak%2FIbu%2C%20kami%20dari%20Pengurus%20TPA%20MJS%20Qur%27anic%20Tech%20mengonfirmasi%20pendaftaran%20ananda%20*${encodeURIComponent(
+                        item.namaLengkap
+                      )}*.`}
                       target="_blank"
                       rel="noreferrer"
                       className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 shadow-sm active:scale-95 transition-all"
@@ -917,7 +1163,7 @@ export default function TpaAdminPortal({
                 </div>
 
                 {/* Card Footer Actions */}
-                <div className="px-4 pb-4 flex items-center gap-2 pt-1 border-t border-slate-100">
+                <div className="px-4 pb-4 flex items-center gap-2 pt-1 border-t border-slate-100 flex-wrap">
                   {item.status === "Pending" ? (
                     <button
                       onClick={() => handleStatusChange(item.id, "ACC")}
@@ -927,19 +1173,29 @@ export default function TpaAdminPortal({
                       <span>Setujui (ACC)</span>
                     </button>
                   ) : (
-                    <button
-                      onClick={() => handleStatusChange(item.id, "Pending")}
-                      className="flex-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm"
-                    >
-                      <Clock className="w-4 h-4" />
-                      <span>Ubah ke Pending</span>
-                    </button>
+                    <>
+                      <button
+                        onClick={() => handleStatusChange(item.id, "Pending")}
+                        className="flex-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-xs py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                      >
+                        <Clock className="w-4 h-4" />
+                        <span>Ke Pending</span>
+                      </button>
+                      <button
+                        onClick={() => handleSendAccWhatsApp(item)}
+                        className="bg-emerald-50 border border-emerald-300 text-emerald-700 font-bold text-xs py-2.5 px-3 rounded-xl transition-all flex items-center gap-1"
+                        title="Kirim Surat Resmi ACC"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Kirim WA</span>
+                      </button>
+                    </>
                   )}
 
                   <button
                     onClick={() => setSelectedDetail(item)}
                     className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
-                    title="Lihat Detail"
+                    title="Lihat Detail Lengkap"
                   >
                     <Eye className="w-4 h-4" />
                   </button>
@@ -947,7 +1203,7 @@ export default function TpaAdminPortal({
                   <button
                     onClick={() => setDeleteTarget(item)}
                     className="p-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-500 transition-colors cursor-pointer"
-                    title="Hapus Permanen"
+                    title="Hapus Data Permanen"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -966,13 +1222,24 @@ export default function TpaAdminPortal({
               </div>
               <div>
                 <div className="font-bold text-slate-600 text-[11px]">TPA MJS Qur'anic Tech</div>
-                <div className="text-[10px] mt-0.5">Jl. Monginsidi No. 51, RT 011/RW 002, Pelem II, Desa Pelem, Kec. Ngawi, Kab. Ngawi, Jawa Timur</div>
-                <div className="text-[10px] mt-0.5">Admin TPA: Dadan Satria (<a href="https://wa.me/6287894416915" className="text-emerald-600 font-semibold">087894416915</a>)</div>
+                <div className="text-[10px] mt-0.5">
+                  Jl. Monginsidi No. 51, RT 011/RW 002, Pelem II, Desa Pelem, Kec. Ngawi, Kab. Ngawi, Jawa Timur
+                </div>
+                <div className="text-[10px] mt-0.5">
+                  Admin TPA MJS: Dadan Satria (
+                  <a href="https://wa.me/6287894416915" className="text-emerald-600 font-semibold hover:underline">
+                    087894416915
+                  </a>
+                  )
+                </div>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-[10px]">Portal Admin — Sistem Informasi Murid TPA</div>
-              <div className="text-[10px] mt-0.5 text-slate-300">Data tersimpan di perangkat ini (localStorage)</div>
+              <div className="text-[10px]">Portal Admin — Sistem Informasi Murid TPA MJS</div>
+              <div className="text-[10px] mt-0.5 text-slate-500">
+                Penyimpanan:{" "}
+                <span className="font-semibold text-emerald-700">Cloud Real-time + Local Cache</span>
+              </div>
             </div>
           </div>
         </div>
@@ -984,7 +1251,6 @@ export default function TpaAdminPortal({
       {selectedDetail && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm">
           <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-2xl shadow-2xl max-h-[92vh] overflow-y-auto border border-slate-100 sm:border-none">
-            {/* Drag Handle (mobile) */}
             <div className="sm:hidden flex justify-center pt-3 pb-1">
               <div className="w-12 h-1 rounded-full bg-slate-200" />
             </div>
@@ -999,14 +1265,18 @@ export default function TpaAdminPortal({
                   <span
                     className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                       selectedDetail.status === "ACC"
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-amber-100 text-amber-800"
+                        ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                        : "bg-amber-100 text-amber-800 border border-amber-200"
                     }`}
                   >
                     {selectedDetail.status === "ACC" ? (
-                      <><Check className="w-3 h-3" /> Disetujui</>
+                      <>
+                        <Check className="w-3 h-3" /> Disetujui (ACC)
+                      </>
                     ) : (
-                      <><Clock className="w-3 h-3" /> Menunggu</>
+                      <>
+                        <Clock className="w-3 h-3" /> Menunggu Konfirmasi
+                      </>
                     )}
                   </span>
                 </div>
@@ -1015,6 +1285,11 @@ export default function TpaAdminPortal({
                 </h3>
                 <p className="text-[11px] text-slate-400 mt-0.5">
                   Didaftarkan: {formatTanggal(selectedDetail.createdAt)}
+                  {selectedDetail.approvedAt && (
+                    <span className="ml-2 text-emerald-700">
+                      · Di-ACC: {formatTanggalShort(selectedDetail.approvedAt)}
+                    </span>
+                  )}
                 </p>
               </div>
               <button
@@ -1027,7 +1302,33 @@ export default function TpaAdminPortal({
 
             {/* Detail Content */}
             <div className="px-6 py-5">
-              {/* Data Murid */}
+              {/* Program & Jadwal */}
+              <div className="mb-4">
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <BookOpen className="w-3.5 h-3.5" />
+                  Program & Jadwal Pilihan
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                  <DetailField
+                    label="Program Belajar Terpilih"
+                    value={selectedDetail.programPilihan || "—"}
+                    className="text-emerald-800 font-bold"
+                    colSpan
+                  />
+                  <DetailField
+                    label="Jadwal Shift"
+                    value={selectedDetail.jadwalShift || "—"}
+                    className="text-slate-800 font-semibold"
+                  />
+                  <DetailField
+                    label="Kemampuan Membaca Al-Qur'an"
+                    value={selectedDetail.kemampuanNgaji}
+                    className="text-teal-700 font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* Data Pribadi Murid */}
               <div className="mb-4">
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                   <User className="w-3.5 h-3.5" />
@@ -1038,41 +1339,19 @@ export default function TpaAdminPortal({
                   <DetailField
                     label="Jenis Kelamin"
                     value={selectedDetail.jenisKelamin}
-                    className={selectedDetail.jenisKelamin === "Laki-laki" ? "text-sky-700" : "text-rose-600"}
+                    className={
+                      selectedDetail.jenisKelamin === "Laki-laki" ? "text-sky-700" : "text-rose-600"
+                    }
                   />
                   <DetailField
                     label="Tempat, Tanggal Lahir"
-                    value={`${selectedDetail.tempatLahir}, ${formatTanggalLahir(selectedDetail.tanggalLahir)}`}
+                    value={`${selectedDetail.tempatLahir}, ${formatTanggalLahir(
+                      selectedDetail.tanggalLahir
+                    )}`}
                   />
                   <DetailField label="Usia" value={`${selectedDetail.usia} Tahun`} />
                   <DetailField label="Sekolah Asal" value={selectedDetail.sekolahAsal || "—"} />
                   <DetailField label="Kelas Sekolah" value={selectedDetail.kelasSekolah} />
-                </div>
-              </div>
-
-              {/* Program TPA */}
-              <div className="mb-4">
-                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <BookOpen className="w-3.5 h-3.5" />
-                  Program & Jadwal TPA
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                  <DetailField
-                    label="Kemampuan Baca Al-Qur'an"
-                    value={selectedDetail.kemampuanNgaji}
-                    className="text-teal-700 font-bold"
-                    colSpan
-                  />
-                  <DetailField
-                    label="Program Pilihan"
-                    value={selectedDetail.programPilihan || "—"}
-                    colSpan
-                  />
-                  <DetailField
-                    label="Jadwal Shift Belajar"
-                    value={selectedDetail.jadwalShift || "—"}
-                    colSpan
-                  />
                 </div>
               </div>
 
@@ -1091,14 +1370,21 @@ export default function TpaAdminPortal({
                       No. WhatsApp Wali
                     </span>
                     <a
-                      href={`https://wa.me/${selectedDetail.whatsappOrtu.replace(/\D/g, "")}?text=Assalamualaikum%20Bapak%2FIbu%2C%20kami%20dari%20Pengurus%20TPA%20MJS%20Qur%27anic%20Tech%20mengonfirmasi%20pendaftaran%20ananda%20*${encodeURIComponent(selectedDetail.namaLengkap)}*.`}
+                      href={`https://wa.me/${selectedDetail.whatsappOrtu.replace(
+                        /\D/g,
+                        ""
+                      )}?text=Assalamualaikum%20Bapak%2FIbu%2C%20kami%20dari%20Pengurus%20TPA%20MJS%20Qur%27anic%20Tech%20mengonfirmasi%20pendaftaran%20ananda%20*${encodeURIComponent(
+                        selectedDetail.namaLengkap
+                      )}*.`}
                       target="_blank"
                       rel="noreferrer"
                       className="font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1.5 group"
                     >
                       <Phone className="w-3.5 h-3.5" />
                       <span className="group-hover:underline">{selectedDetail.whatsappOrtu}</span>
-                      <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full ml-1">Chat WA</span>
+                      <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full ml-1">
+                        Chat WA
+                      </span>
                     </a>
                   </div>
                 </div>
@@ -1129,24 +1415,24 @@ export default function TpaAdminPortal({
 
             {/* Modal Footer Actions */}
             <div className="px-6 pb-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <div className="flex items-center gap-2 flex-1">
+              <div className="flex items-center gap-2 flex-1 flex-wrap">
                 <button
                   onClick={() => handlePrintSingleStudent(selectedDetail)}
-                  className="flex-1 sm:flex-initial bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  className="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <Printer className="w-3.5 h-3.5 text-slate-300" />
-                  <span>Cetak Lembar Ini</span>
+                  <span>Cetak Biodata</span>
                 </button>
 
-                <a
-                  href={`https://wa.me/${selectedDetail.whatsappOrtu.replace(/\D/g, "")}?text=Assalamualaikum%20Bapak%2FIbu%2C%20kami%20dari%20Pengurus%20TPA%20MJS%20Qur%27anic%20Tech%20mengonfirmasi%20pendaftaran%20ananda%20*${encodeURIComponent(selectedDetail.namaLengkap)}*.`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5"
-                >
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  <span>Hubungi Wali</span>
-                </a>
+                {selectedDetail.status === "ACC" && (
+                  <button
+                    onClick={() => handleSendAccWhatsApp(selectedDetail)}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Kirim Surat ACC via WA</span>
+                  </button>
+                )}
               </div>
 
               <div className="flex items-center gap-2 justify-end">
@@ -1181,6 +1467,102 @@ export default function TpaAdminPortal({
       )}
 
       {/* ══════════════════════════════════════════════════════
+          MODAL CADANGAN & IMPORT DATABASE (RESTORE)
+          ══════════════════════════════════════════════════════ */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-100">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+              <div className="flex items-center gap-2">
+                <Database className="w-5 h-5 text-emerald-700" />
+                <h3 className="font-bold text-base text-slate-900">Cadangan & Pulihkan Database</h3>
+              </div>
+              <button
+                onClick={() => setIsImportModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 mb-4 leading-relaxed">
+              Anda dapat mengunduh seluruh data murid ke file JSON atau memulihkan data dari berkas cadangan JSON yang sebelumnya disimpan.
+            </p>
+
+            <div className="space-y-4">
+              {/* Opsi 1: Unduh Backup */}
+              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
+                <div>
+                  <div className="font-bold text-xs text-slate-800">Unduh Cadangan Lengkap</div>
+                  <div className="text-[11px] text-slate-400">Format JSON (berisi {registrations.length} data murid)</div>
+                </div>
+                <button
+                  onClick={() => exportTpaToJson(registrations)}
+                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold flex items-center gap-1.5"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download</span>
+                </button>
+              </div>
+
+              {/* Opsi 2: Upload File JSON */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                  Pulihkan / Unggah Berkas JSON Cadangan
+                </label>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept=".json,application/json"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full py-2.5 px-4 border-2 border-dashed border-slate-200 hover:border-emerald-500 rounded-xl text-xs font-medium text-slate-600 hover:text-emerald-700 bg-slate-50 hover:bg-emerald-50/50 transition-all flex items-center justify-center gap-2"
+                >
+                  <Upload className="w-4 h-4 text-emerald-600" />
+                  <span>Pilih File Backup (.json) dari Komputer</span>
+                </button>
+              </div>
+
+              {/* Textarea Paste JSON */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                  Atau Tempelkan (Paste) Teks JSON Di Sini
+                </label>
+                <textarea
+                  rows={4}
+                  value={importJsonText}
+                  onChange={(e) => setImportJsonText(e.target.value)}
+                  placeholder='[ { "id": "REG-TPA-001", "namaLengkap": "..." } ]'
+                  className="w-full p-3 font-mono text-[11px] bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  onClick={() => setIsImportModalOpen(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleImportSubmit}
+                  disabled={!importJsonText.trim()}
+                  className="flex-1 py-2.5 rounded-xl bg-[#064E3B] hover:bg-[#08634b] disabled:opacity-40 text-white font-bold text-xs flex items-center justify-center gap-1.5"
+                >
+                  <Database className="w-3.5 h-3.5" />
+                  <span>Pulihkan ke Database</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════
           MODAL KONFIRMASI HAPUS PERMANEN
           ══════════════════════════════════════════════════════ */}
       {deleteTarget && (
@@ -1195,8 +1577,8 @@ export default function TpaAdminPortal({
               <p className="text-slate-600 text-sm leading-relaxed">
                 Data calon murid{" "}
                 <strong className="text-slate-900">{deleteTarget.namaLengkap}</strong>{" "}
-                <span className="font-mono text-slate-500 text-xs">({deleteTarget.id})</span>{" "}
-                akan dihapus permanen dan tidak dapat dipulihkan.
+                <span className="font-mono text-slate-500 text-xs">({deleteTarget.id})</span> akan
+                dihapus dari server cloud dan memori lokal. Tindakan ini tidak dapat dibatalkan.
               </p>
             </div>
 

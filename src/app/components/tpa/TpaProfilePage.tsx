@@ -24,7 +24,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { saveTpaRegistration } from "./tpaData";
+import { saveTpaRegistration, saveTpaRegistrationAsync } from "./tpaData";
 import {
   IconTahsin3D,
   IconTahfidz3D,
@@ -113,7 +113,7 @@ export default function TpaProfilePage({ onBackToHome, onNavigateToAdmin }: TpaP
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.namaLengkap.trim() || !formData.whatsappOrtu.trim()) {
       alert("Mohon lengkapi Nama Lengkap Murid dan Nomor WhatsApp Wali Murid.");
@@ -123,8 +123,8 @@ export default function TpaProfilePage({ onBackToHome, onNavigateToAdmin }: TpaP
     setIsSubmitting(true);
 
     try {
-      // 1. Simpan ke sistem (localStorage) dengan status Pending
-      const saved = saveTpaRegistration(formData);
+      // 1. Simpan ke sistem Cloud Database (dengan offline cache fallback)
+      const saved = await saveTpaRegistrationAsync(formData);
 
       // 2. Format pesan WhatsApp rapi ke Admin: 087894416915
       const adminWa = "6287894416915";
@@ -140,7 +140,9 @@ export default function TpaProfilePage({ onBackToHome, onNavigateToAdmin }: TpaP
         `• Jenis Kelamin: ${formData.jenisKelamin}\n` +
         `• Usia: ${formData.usia} Tahun\n` +
         `• Sekolah Asal: ${formData.sekolahAsal || "-"} (${formData.kelasSekolah || "-"})\n` +
-        `• Kemampuan Ngaji: *${formData.kemampuanNgaji}*\n\n` +
+        `• Kemampuan Ngaji: *${formData.kemampuanNgaji}*\n` +
+        `• Program Pilihan: *${formData.programPilihan}*\n` +
+        `• Jadwal Shift: *${formData.jadwalShift}*\n\n` +
         `*DATA ORANG TUA / WALI:*\n` +
         `• Nama Ayah: ${formData.namaAyah || "-"}\n` +
         `• Nama Ibu: ${formData.namaIbu || "-"}\n` +
@@ -1100,6 +1102,37 @@ export default function TpaProfilePage({ onBackToHome, onNavigateToAdmin }: TpaP
                     <option value="Iqro Jilid 1-3">Iqro' Jilid 1 sampai 3</option>
                     <option value="Iqro Jilid 4-6">Iqro' Jilid 4 sampai 6</option>
                     <option value="Al-Qur'an Lancar">Sudah Masuk Al-Qur'an (Belajar Tajwid)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Pilihan Program Belajar
+                  </label>
+                  <select
+                    name="programPilihan"
+                    value={formData.programPilihan}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 text-base sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] transition-all bg-white cursor-pointer font-medium min-h-[44px]"
+                  >
+                    <option value="Tahsin Tajwid & Qur'anic Tech Kids">Tahsin Tajwid & Qur'anic Tech Kids</option>
+                    <option value="Tahfidz Juz 30 & Adab Digital Murid">Tahfidz Juz 30 & Adab Digital Murid</option>
+                    <option value="Qur'anic Tech & Multimedia Islami">Qur'anic Tech & Multimedia Islami</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Pilihan Jadwal Shift Belajar
+                  </label>
+                  <select
+                    name="jadwalShift"
+                    value={formData.jadwalShift}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 text-base sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] transition-all bg-white cursor-pointer font-medium min-h-[44px]"
+                  >
+                    <option value="Shift Sore (15.45 - 17.00 WIB)">Shift Sore (15.45 - 17.00 WIB)</option>
+                    <option value="Shift Maghrib (18.15 - 19.30 WIB)">Shift Maghrib (18.15 - 19.30 WIB)</option>
                   </select>
                 </div>
               </div>
