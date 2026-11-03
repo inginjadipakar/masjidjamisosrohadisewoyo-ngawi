@@ -1,3 +1,4 @@
+/// <reference types="node" />
 // Vercel Serverless Function: /api/registrations
 // Handles CRUD operations for TPA MJS Qur'anic Tech student registrations.
 // Persists data in Upstash Redis REST datastore with resilient fallbacks.
