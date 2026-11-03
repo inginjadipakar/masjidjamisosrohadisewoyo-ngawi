@@ -26,7 +26,6 @@ interface TpaRegistration {
   alamatRumah: string;
   kemampuanNgaji: "Belum Bisa" | "Iqro Jilid 1-3" | "Iqro Jilid 4-6" | "Al-Qur'an Lancar";
   programPilihan: string;
-  jadwalShift: "Shift Sore (15.45 - 17.00 WIB)" | "Shift Maghrib (18.15 - 19.30 WIB)";
   namaAyah: string;
   namaIbu: string;
   pekerjaanOrtu: string;
@@ -36,74 +35,8 @@ interface TpaRegistration {
   approvedAt?: string;
 }
 
-const INITIAL_SEED_DATA: TpaRegistration[] = [
-  {
-    id: "REG-TPA-001",
-    createdAt: "2026-11-01T08:30:00.000Z",
-    namaLengkap: "Muhammad Faiz Al-Fatih",
-    namaPanggilan: "Faiz",
-    tempatLahir: "Ngawi",
-    tanggalLahir: "2018-05-14",
-    jenisKelamin: "Laki-laki",
-    usia: 8,
-    sekolahAsal: "SDIT Al-Ihsan Ngawi",
-    kelasSekolah: "Kelas 2",
-    alamatRumah: "Jl. Trunojoyo No. 45, RT 02/RW 03, Ngawi",
-    kemampuanNgaji: "Iqro Jilid 4-6",
-    programPilihan: "Tahsin Tajwid & Qur'anic Tech Kids",
-    jadwalShift: "Shift Sore (15.45 - 17.00 WIB)",
-    namaAyah: "Budi Santoso",
-    namaIbu: "Siti Rahmawati",
-    pekerjaanOrtu: "Wiraswasta",
-    whatsappOrtu: "081234567890",
-    catatanKhusus: "Sangat antusias dengan animasi cerita nabi di komputer",
-    status: "ACC",
-  },
-  {
-    id: "REG-TPA-002",
-    createdAt: "2026-11-01T13:15:00.000Z",
-    namaLengkap: "Aisyah Nur Salsabila",
-    namaPanggilan: "Aisyah",
-    tempatLahir: "Madiun",
-    tanggalLahir: "2019-09-20",
-    jenisKelamin: "Perempuan",
-    usia: 7,
-    sekolahAsal: "MIN 1 Ngawi",
-    kelasSekolah: "Kelas 1",
-    alamatRumah: "Perumahan Griya Indah Asri Blok C-12, Ngawi",
-    kemampuanNgaji: "Iqro Jilid 1-3",
-    programPilihan: "Tahfidz Juz 30 & Adab Digital Murid",
-    jadwalShift: "Shift Sore (15.45 - 17.00 WIB)",
-    namaAyah: "Ahmad Zainuddin",
-    namaIbu: "Dewi Lestari",
-    pekerjaanOrtu: "PNS",
-    whatsappOrtu: "085678901234",
-    catatanKhusus: "Pemalu di awal, senang menggambar",
-    status: "Pending",
-  },
-  {
-    id: "REG-TPA-003",
-    createdAt: "2026-11-02T09:40:00.000Z",
-    namaLengkap: "Kenzi Rayyan Pratama",
-    namaPanggilan: "Kenzi",
-    tempatLahir: "Ngawi",
-    tanggalLahir: "2017-11-08",
-    jenisKelamin: "Laki-laki",
-    usia: 9,
-    sekolahAsal: "SDN Karangasri 1",
-    kelasSekolah: "Kelas 3",
-    alamatRumah: "Dusun Krajan, Desa Beran, Kec. Ngawi",
-    kemampuanNgaji: "Al-Qur'an Lancar",
-    programPilihan: "Qur'anic Tech & Multimedia Islami",
-    jadwalShift: "Shift Maghrib (18.15 - 19.30 WIB)",
-    namaAyah: "Rudi Hermawan",
-    namaIbu: "Nurul Hidayah",
-    pekerjaanOrtu: "Karyawan Swasta",
-    whatsappOrtu: "087812345678",
-    catatanKhusus: "Sudah hafal Juz 30 separuh",
-    status: "Pending",
-  },
-];
+const INITIAL_SEED_DATA: TpaRegistration[] = [];
+
 
 async function redisGetRegistrations(): Promise<TpaRegistration[]> {
   const res = await fetch(`${UPSTASH_URL}/get/${encodeURIComponent(REDIS_KEY)}`, {
@@ -170,8 +103,16 @@ export default async function handler(req: any, res: any) {
 
       const currentList = await redisGetRegistrations();
 
-      // Generate nomor registrasi urut
-      const nextNum = String(currentList.length + 1).padStart(3, "0");
+      // Generate nomor registrasi urut tahan bentrok
+      let maxId = 0;
+      for (const item of currentList) {
+        const match = item.id?.match(/REG-TPA-(\d+)/);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (!isNaN(num) && num > maxId) maxId = num;
+        }
+      }
+      const nextNum = String(maxId + 1).padStart(3, "0");
       const newRecord: TpaRegistration = {
         ...payload,
         id: `REG-TPA-${nextNum}`,

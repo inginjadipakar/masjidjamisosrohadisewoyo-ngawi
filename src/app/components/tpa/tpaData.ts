@@ -12,7 +12,6 @@ export interface TpaRegistration {
   alamatRumah: string;
   kemampuanNgaji: "Belum Bisa" | "Iqro Jilid 1-3" | "Iqro Jilid 4-6" | "Al-Qur'an Lancar";
   programPilihan: string;
-  jadwalShift: "Shift Sore (15.45 - 17.00 WIB)" | "Shift Maghrib (18.15 - 19.30 WIB)";
   namaAyah: string;
   namaIbu: string;
   pekerjaanOrtu: string;
@@ -28,93 +27,41 @@ const UPSTASH_REST_URL = "https://glad-honeybee-171670.upstash.io";
 const UPSTASH_TOKEN = "gQAAAAAAAp6WAAIgcDIwMGM0YWMxNjcyY2E0ODk2YTM0NWJmMDcwOGYyYWIyNg";
 const REDIS_KEY = "mjs:tpa:registrations_v1";
 
-// Mock data awal jika offline dan belum ada data sama sekali
-export const INITIAL_SEED_DATA: TpaRegistration[] = [
-  {
-    id: "REG-TPA-001",
-    createdAt: "2026-11-01T08:30:00.000Z",
-    namaLengkap: "Muhammad Faiz Al-Fatih",
-    namaPanggilan: "Faiz",
-    tempatLahir: "Ngawi",
-    tanggalLahir: "2018-05-14",
-    jenisKelamin: "Laki-laki",
-    usia: 8,
-    sekolahAsal: "SDIT Al-Ihsan Ngawi",
-    kelasSekolah: "Kelas 2",
-    alamatRumah: "Jl. Trunojoyo No. 45, RT 02/RW 03, Ngawi",
-    kemampuanNgaji: "Iqro Jilid 4-6",
-    programPilihan: "Tahsin Tajwid & Qur'anic Tech Kids",
-    jadwalShift: "Shift Sore (15.45 - 17.00 WIB)",
-    namaAyah: "Budi Santoso",
-    namaIbu: "Siti Rahmawati",
-    pekerjaanOrtu: "Wiraswasta",
-    whatsappOrtu: "081234567890",
-    catatanKhusus: "Sangat antusias dengan animasi cerita nabi di komputer",
-    status: "ACC",
-  },
-  {
-    id: "REG-TPA-002",
-    createdAt: "2026-11-01T13:15:00.000Z",
-    namaLengkap: "Aisyah Nur Salsabila",
-    namaPanggilan: "Aisyah",
-    tempatLahir: "Madiun",
-    tanggalLahir: "2019-09-20",
-    jenisKelamin: "Perempuan",
-    usia: 7,
-    sekolahAsal: "MIN 1 Ngawi",
-    kelasSekolah: "Kelas 1",
-    alamatRumah: "Perumahan Griya Indah Asri Blok C-12, Ngawi",
-    kemampuanNgaji: "Iqro Jilid 1-3",
-    programPilihan: "Tahfidz Juz 30 & Adab Digital Murid",
-    jadwalShift: "Shift Sore (15.45 - 17.00 WIB)",
-    namaAyah: "Ahmad Zainuddin",
-    namaIbu: "Dewi Lestari",
-    pekerjaanOrtu: "PNS",
-    whatsappOrtu: "085678901234",
-    catatanKhusus: "Pemalu di awal, senang menggambar",
-    status: "Pending",
-  },
-  {
-    id: "REG-TPA-003",
-    createdAt: "2026-11-02T09:40:00.000Z",
-    namaLengkap: "Kenzi Rayyan Pratama",
-    namaPanggilan: "Kenzi",
-    tempatLahir: "Ngawi",
-    tanggalLahir: "2017-11-08",
-    jenisKelamin: "Laki-laki",
-    usia: 9,
-    sekolahAsal: "SDN Karangasri 1",
-    kelasSekolah: "Kelas 3",
-    alamatRumah: "Dusun Krajan, Desa Beran, Kec. Ngawi",
-    kemampuanNgaji: "Al-Qur'an Lancar",
-    programPilihan: "Qur'anic Tech & Multimedia Islami",
-    jadwalShift: "Shift Maghrib (18.15 - 19.30 WIB)",
-    namaAyah: "Rudi Hermawan",
-    namaIbu: "Nurul Hidayah",
-    pekerjaanOrtu: "Karyawan Swasta",
-    whatsappOrtu: "087812345678",
-    catatanKhusus: "Sudah hafal Juz 30 separuh",
-    status: "Pending",
-  },
-];
+// Mock data awal kosong (tanpa data dummy)
+export const INITIAL_SEED_DATA: TpaRegistration[] = [];
 
 /* ──────────────────────────────────────────────────────────
    1. LOCALSTORAGE CACHE LAYER (SYNC)
    ────────────────────────────────────────────────────────── */
 
 export function getTpaRegistrations(): TpaRegistration[] {
-  if (typeof window === "undefined") return INITIAL_SEED_DATA;
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_SEED_DATA));
-      return INITIAL_SEED_DATA;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+      return [];
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
     console.error("Gagal membaca pendaftaran TPA dari localStorage:", e);
-    return INITIAL_SEED_DATA;
+    return [];
   }
+}
+
+export function generateNextRegistrationId(existing: TpaRegistration[]): string {
+  let maxId = 0;
+  for (const item of existing) {
+    const match = item.id?.match(/REG-TPA-(\d+)/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num) && num > maxId) {
+        maxId = num;
+      }
+    }
+  }
+  return `REG-TPA-${String(maxId + 1).padStart(3, "0")}`;
 }
 
 function updateLocalCache(items: TpaRegistration[]) {
@@ -128,10 +75,10 @@ function updateLocalCache(items: TpaRegistration[]) {
 
 export function saveTpaRegistration(data: Omit<TpaRegistration, "id" | "createdAt" | "status">): TpaRegistration {
   const current = getTpaRegistrations();
-  const idNumber = String(current.length + 1).padStart(3, "0");
+  const newId = generateNextRegistrationId(current);
   const newRecord: TpaRegistration = {
     ...data,
-    id: `REG-TPA-${idNumber}`,
+    id: newId,
     createdAt: new Date().toISOString(),
     status: "Pending",
   };
@@ -263,12 +210,11 @@ export async function fetchTpaRegistrationsAsync(): Promise<{
 export async function saveTpaRegistrationAsync(
   data: Omit<TpaRegistration, "id" | "createdAt" | "status">
 ): Promise<TpaRegistration> {
-  // Optimistically create record
   const current = getTpaRegistrations();
-  const nextNum = String(current.length + 1).padStart(3, "0");
+  const nextId = generateNextRegistrationId(current);
   const fallbackRecord: TpaRegistration = {
     ...data,
-    id: `REG-TPA-${nextNum}`,
+    id: nextId,
     createdAt: new Date().toISOString(),
     status: "Pending",
   };
@@ -295,10 +241,10 @@ export async function saveTpaRegistrationAsync(
 
   // 2. Direct Cloud Fallback
   const cloudList = (await directUpstashGet()) || current;
-  const directIdNum = String(cloudList.length + 1).padStart(3, "0");
+  const directId = generateNextRegistrationId(cloudList);
   const cloudRecord: TpaRegistration = {
     ...data,
-    id: `REG-TPA-${directIdNum}`,
+    id: directId,
     createdAt: new Date().toISOString(),
     status: "Pending",
   };
@@ -306,6 +252,14 @@ export async function saveTpaRegistrationAsync(
   await directUpstashSet(updatedList);
   updateLocalCache(updatedList);
   return cloudRecord;
+}
+
+/**
+ * Membersihkan seluruh data pendaftaran (Reset database)
+ */
+export async function clearAllRegistrationsAsync(): Promise<void> {
+  updateLocalCache([]);
+  await directUpstashSet([]);
 }
 
 /**
@@ -423,7 +377,6 @@ export function exportTpaToCsv(data: TpaRegistration[]) {
     "Kelas",
     "Kemampuan Baca Al-Qur'an",
     "Program Pilihan",
-    "Jadwal Shift",
     "Nama Ayah",
     "Nama Ibu",
     "Pekerjaan Orang Tua",
@@ -470,7 +423,6 @@ export function exportTpaToCsv(data: TpaRegistration[]) {
       item.kelasSekolah,
       item.kemampuanNgaji,
       item.programPilihan,
-      item.jadwalShift,
       item.namaAyah,
       item.namaIbu,
       item.pekerjaanOrtu,
@@ -528,7 +480,6 @@ export function exportTpaToPdf(data: TpaRegistration[], filterStatus: string = "
         </td>
         <td>
           <div style="font-weight: 700; color: #0f766e;">${item.programPilihan}</div>
-          <div style="font-size: 8.5pt; color: #475569;">Shift: ${item.jadwalShift}</div>
           <div style="font-size: 8pt; color: #b45309; margin-top: 2px;">Kemampuan: ${item.kemampuanNgaji}</div>
         </td>
         <td>

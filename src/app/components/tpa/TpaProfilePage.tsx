@@ -88,7 +88,6 @@ export default function TpaProfilePage({ onBackToHome, onNavigateToAdmin }: TpaP
     alamatRumah: "",
     kemampuanNgaji: "Iqro Jilid 1-3" as "Belum Bisa" | "Iqro Jilid 1-3" | "Iqro Jilid 4-6" | "Al-Qur'an Lancar",
     programPilihan: "Tahsin Tajwid & Qur'anic Tech Kids",
-    jadwalShift: "Shift Sore (15.45 - 17.00 WIB)" as "Shift Sore (15.45 - 17.00 WIB)" | "Shift Maghrib (18.15 - 19.30 WIB)",
     namaAyah: "",
     namaIbu: "",
     pekerjaanOrtu: "",
@@ -142,7 +141,6 @@ export default function TpaProfilePage({ onBackToHome, onNavigateToAdmin }: TpaP
         `• Sekolah Asal: ${formData.sekolahAsal || "-"} (${formData.kelasSekolah || "-"})\n` +
         `• Kemampuan Ngaji: *${formData.kemampuanNgaji}*\n` +
         `• Program Pilihan: *${formData.programPilihan}*\n` +
-        `• Jadwal Shift: *${formData.jadwalShift}*\n\n` +
         `*DATA ORANG TUA / WALI:*\n` +
         `• Nama Ayah: ${formData.namaAyah || "-"}\n` +
         `• Nama Ibu: ${formData.namaIbu || "-"}\n` +
@@ -174,7 +172,6 @@ export default function TpaProfilePage({ onBackToHome, onNavigateToAdmin }: TpaP
         alamatRumah: "",
         kemampuanNgaji: "Iqro Jilid 1-3",
         programPilihan: "Tahsin Tajwid & Qur'anic Tech Kids",
-        jadwalShift: "Shift Sore (15.45 - 17.00 WIB)",
         namaAyah: "",
         namaIbu: "",
         pekerjaanOrtu: "",
@@ -1118,21 +1115,6 @@ export default function TpaProfilePage({ onBackToHome, onNavigateToAdmin }: TpaP
                     <option value="Tahsin Tajwid & Qur'anic Tech Kids">Tahsin Tajwid & Qur'anic Tech Kids</option>
                     <option value="Tahfidz Juz 30 & Adab Digital Murid">Tahfidz Juz 30 & Adab Digital Murid</option>
                     <option value="Qur'anic Tech & Multimedia Islami">Qur'anic Tech & Multimedia Islami</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Pilihan Jadwal Shift Belajar
-                  </label>
-                  <select
-                    name="jadwalShift"
-                    value={formData.jadwalShift}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 text-base sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] transition-all bg-white cursor-pointer font-medium min-h-[44px]"
-                  >
-                    <option value="Shift Sore (15.45 - 17.00 WIB)">Shift Sore (15.45 - 17.00 WIB)</option>
-                    <option value="Shift Maghrib (18.15 - 19.30 WIB)">Shift Maghrib (18.15 - 19.30 WIB)</option>
                   </select>
                 </div>
               </div>

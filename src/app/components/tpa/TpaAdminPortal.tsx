@@ -34,14 +34,19 @@ import {
   Download,
   Upload,
   Send,
-  Copy,
+  Plus,
+  Trash,
+  UserPlus,
+  CheckSquare,
 } from "lucide-react";
 import {
   TpaRegistration,
   getTpaRegistrations,
   fetchTpaRegistrationsAsync,
+  saveTpaRegistrationAsync,
   updateTpaStatusAsync,
   deleteTpaPermanentlyAsync,
+  clearAllRegistrationsAsync,
   importTpaRegistrations,
   exportTpaToJson,
   exportTpaToCsv,
@@ -83,20 +88,44 @@ export default function TpaAdminPortal({
   const [syncSource, setSyncSource] = useState<"cloud" | "cache">("cloud");
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
 
+  // Modal Manual Tambah Murid (Sesuai Formulir Pendaftaran)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSubmittingAdd, setIsSubmittingAdd] = useState(false);
+  const initialNewFormData: Omit<TpaRegistration, "id" | "createdAt" | "status"> = {
+    namaLengkap: "",
+    namaPanggilan: "",
+    tempatLahir: "",
+    tanggalLahir: "",
+    jenisKelamin: "Laki-laki",
+    usia: 7,
+    sekolahAsal: "",
+    kelasSekolah: "Kelas 1",
+    alamatRumah: "",
+    kemampuanNgaji: "Iqro Jilid 1-3",
+    programPilihan: "Tahsin Tajwid & Qur'anic Tech Kids",
+    namaAyah: "",
+    namaIbu: "",
+    pekerjaanOrtu: "",
+    whatsappOrtu: "",
+    catatanKhusus: "",
+  };
+  const [newFormData, setNewFormData] = useState(initialNewFormData);
+
+  // Modal Reset Database / Hapus Dummy
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+
   // Backup & Import Modal
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importJsonText, setImportJsonText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load data function (Hybrid: Local Cache first, then Cloud Sync)
+  // Load data function
   const loadData = async (manualTrigger: boolean = false) => {
-    // 1. Tampilkan local cache langsung (instan, 0 ms lag)
     const local = getTpaRegistrations();
     if (!manualTrigger && registrations.length === 0) {
       setRegistrations(local);
     }
 
-    // 2. Fetch fresh data dari server cloud
     setIsSyncing(true);
     try {
       const result = await fetchTpaRegistrationsAsync();
@@ -112,7 +141,7 @@ export default function TpaAdminPortal({
       if (manualTrigger) {
         showToast(
           result.source === "cloud"
-            ? `Sinkronisasi cloud berhasil (${result.data.length} data murid).`
+            ? `Sinkronisasi cloud berhasil (${result.data.length} murid terdaftar).`
             : "Terhubung ke cache lokal (offline).",
           "success"
         );
@@ -131,7 +160,7 @@ export default function TpaAdminPortal({
     if (isAuthenticated) {
       loadData();
 
-      // Auto-poll cloud setiap 25 detik agar pendaftaran baru dari wali murid langsung masuk
+      // Auto-poll cloud setiap 25 detik
       const pollTimer = setInterval(() => {
         loadData(false);
       }, 25000);
@@ -202,9 +231,8 @@ export default function TpaAdminPortal({
     }
 
     if (newStatus === "ACC") {
-      const student = updated.find((it) => it.id === id);
       showToast(
-        `Pendaftaran [${id}] telah di-ACC! Anda dapat mengirim konfirmasi resmi ke WhatsApp wali.`,
+        `Pendaftaran [${id}] telah di-ACC! Anda dapat mengirim surat konfirmasi ke WhatsApp wali.`,
         "success"
       );
     } else {
@@ -226,6 +254,42 @@ export default function TpaAdminPortal({
     showToast(`Data ${nama} (${id}) telah dihapus dari sistem.`, "error");
   };
 
+  // Bersihkan seluruh data dummy / reset database
+  const handleClearAllDummy = async () => {
+    try {
+      await clearAllRegistrationsAsync();
+      setRegistrations([]);
+      setIsResetConfirmOpen(false);
+      showToast("Seluruh data dummy berhasil dihapus. Database kini bersih!", "success");
+    } catch (e) {
+      console.error("Gagal reset:", e);
+      showToast("Gagal mengosongkan database.", "error");
+    }
+  };
+
+  // Submit Tambah Murid Manual dari Admin (Sama persis dengan formulir pendaftaran)
+  const handleAddSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFormData.namaLengkap.trim() || !newFormData.whatsappOrtu.trim()) {
+      alert("Mohon lengkapi Nama Lengkap Murid dan Nomor WhatsApp Wali Murid.");
+      return;
+    }
+
+    setIsSubmittingAdd(true);
+    try {
+      const saved = await saveTpaRegistrationAsync(newFormData);
+      setRegistrations((prev) => [saved, ...prev.filter((it) => it.id !== saved.id)]);
+      setIsAddModalOpen(false);
+      setNewFormData(initialNewFormData);
+      showToast(`Pendaftaran ananda ${saved.namaLengkap} (${saved.id}) berhasil ditambahkan!`, "success");
+    } catch (err: any) {
+      console.error(err);
+      alert("Gagal menambahkan pendaftaran: " + (err.message || "Error server"));
+    } finally {
+      setIsSubmittingAdd(false);
+    }
+  };
+
   // Helper kirim pesan resmi penerimaan murid baru ke WhatsApp wali murid
   const handleSendAccWhatsApp = (student: TpaRegistration) => {
     const cleanWa = student.whatsappOrtu.replace(/\D/g, "");
@@ -237,11 +301,10 @@ export default function TpaAdminPortal({
       `-----------------------------------------\n\n` +
       `Assalamu'alaikum Warahmatullahi Wabarakatuh.\n\n` +
       `Kepada Yth. Bapak/Ibu Wali dari Ananda:\n` +
-      `Nama Murid: *${student.namaLengkap}* (${student.namaPanggilan})\n` +
-      `No. Registrasi: *${student.id}*\n\n` +
+      `• Nama Murid: *${student.namaLengkap}* (${student.namaPanggilan})\n` +
+      `• No. Registrasi: *${student.id}*\n\n` +
       `Alhamdulillah, dengan penuh rasa syukur, kami menginformasikan bahwa pendaftaran Ananda dinyatakan *DITERIMA (ACC)* di program:\n` +
-      `📖 *${student.programPilihan}*\n` +
-      `⏰ *${student.jadwalShift}*\n\n` +
+      `📖 Program: *${student.programPilihan}*\n\n` +
       `Jadwal temu orientasi wali murid dan pembagian sarana mengaji akan kami informasikan lebih lanjut melalui grup koordinasi.\n\n` +
       `Jika ada pertanyaan, silakan hubungi Sekretariat TPA MJS di 0878-9441-6915 (Dadan Satria).\n\n` +
       `Jazakumullah khairan katsiran atas kepercayaan Bapak/Ibu.\n` +
@@ -256,8 +319,8 @@ export default function TpaAdminPortal({
   const handleImportSubmit = async () => {
     try {
       const parsed = JSON.parse(importJsonText);
-      if (!Array.isArray(parsed) || parsed.length === 0) {
-        alert("Format JSON tidak valid atau data kosong. Harus berupa array objek murid.");
+      if (!Array.isArray(parsed)) {
+        alert("Format JSON tidak valid. Harus berupa array objek murid.");
         return;
       }
       const success = await importTpaRegistrations(parsed);
@@ -294,11 +357,14 @@ export default function TpaAdminPortal({
       item.namaPanggilan.toLowerCase().includes(q) ||
       (item.namaAyah && item.namaAyah.toLowerCase().includes(q)) ||
       (item.namaIbu && item.namaIbu.toLowerCase().includes(q)) ||
+      (item.pekerjaanOrtu && item.pekerjaanOrtu.toLowerCase().includes(q)) ||
       (item.whatsappOrtu && item.whatsappOrtu.includes(q)) ||
       (item.sekolahAsal && item.sekolahAsal.toLowerCase().includes(q)) ||
+      (item.kelasSekolah && item.kelasSekolah.toLowerCase().includes(q)) ||
       (item.kemampuanNgaji && item.kemampuanNgaji.toLowerCase().includes(q)) ||
       (item.programPilihan && item.programPilihan.toLowerCase().includes(q)) ||
-      (item.jadwalShift && item.jadwalShift.toLowerCase().includes(q)) ||
+      (item.alamatRumah && item.alamatRumah.toLowerCase().includes(q)) ||
+      (item.catatanKhusus && item.catatanKhusus.toLowerCase().includes(q)) ||
       item.id.toLowerCase().includes(q);
 
     return matchesFilter && matchesSearch;
@@ -534,7 +600,6 @@ export default function TpaAdminPortal({
       {/* ── STICKY HEADER ── */}
       <header className="bg-slate-900 text-white sticky top-0 z-40 shadow-lg border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
-          {/* Left: Logo + Identity */}
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-[#C89B3C]/60 p-0.5 bg-white shadow-md flex items-center justify-center flex-shrink-0">
               <img
@@ -554,7 +619,6 @@ export default function TpaAdminPortal({
               <div className="text-[10px] text-slate-400 truncate flex items-center gap-2">
                 <span>Masjid Jami Sosrohadisewoyo Ngawi</span>
                 <span className="text-slate-600">·</span>
-                {/* Real-time Cloud Indicator */}
                 <span className="inline-flex items-center gap-1 text-emerald-400 font-medium">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   {syncSource === "cloud" ? "Cloud Real-time" : "Cache Lokal"}
@@ -563,7 +627,6 @@ export default function TpaAdminPortal({
             </div>
           </div>
 
-          {/* Right: Nav Actions */}
           <div className="flex items-center gap-2 flex-shrink-0">
             {onNavigateToPublicTpa && (
               <button
@@ -611,30 +674,50 @@ export default function TpaAdminPortal({
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                Pendaftaran baru dari wali murid otomatis masuk ke tabel ini secara real-time.
-                {lastSyncedAt && ` (Pembaruan terakhir: ${lastSyncedAt} WIB)`}
+                Data diselaraskan 100% dengan Formulir Pendaftaran Murid Baru. Pendaftar baru otomatis muncul di sini.
+                {lastSyncedAt && ` (Sinkron terakhir: ${lastSyncedAt} WIB)`}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap self-start md:self-auto">
+            {/* Tombol Tambah Murid Manual */}
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#064E3B] hover:bg-[#08634b] text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm active:scale-95"
+              title="Tambah Data Murid Baru Secara Manual (Sesuai Formulir)"
+            >
+              <UserPlus className="w-3.5 h-3.5 text-[#C89B3C]" />
+              <span>+ Tambah Murid</span>
+            </button>
+
             <button
               onClick={() => loadData(true)}
               disabled={isSyncing}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer active:scale-95 disabled:opacity-50"
               title="Sinkronkan data dengan server cloud sekarang"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin text-emerald-600" : ""}`} />
-              <span>{isSyncing ? "Menyinkronkan..." : "Sinkronkan Sekarang"}</span>
+              <span>{isSyncing ? "Menyinkronkan..." : "Sinkronkan"}</span>
             </button>
 
             <button
               onClick={() => setIsImportModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
               title="Cadangan & Pemulihan Database"
             >
               <Database className="w-3.5 h-3.5 text-[#C89B3C]" />
-              <span>Cadangan DB</span>
+              <span>Cadangan</span>
+            </button>
+
+            {/* Tombol Hapus Dummy / Reset Database */}
+            <button
+              onClick={() => setIsResetConfirmOpen(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded-xl transition-all cursor-pointer border border-rose-200"
+              title="Bersihkan Seluruh Data Dummy / Reset ke 0"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+              <span>Reset Data</span>
             </button>
           </div>
         </div>
@@ -649,11 +732,10 @@ export default function TpaAdminPortal({
               Manajemen Pendaftaran Murid Baru
             </h1>
             <p className="text-slate-500 text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed">
-              TPA MJS Qur'anic Tech · Masjid Jami Sosrohadisewoyo Ngawi. Konfirmasi persetujuan (ACC) langsung mengirim surat resmi ke WhatsApp wali.
+              TPA MJS Qur'anic Tech · Masjid Jami Sosrohadisewoyo Ngawi. Seluruh kolom dan data terintegrasi 1-to-1 dengan Formulir Pendaftaran Murid.
             </p>
           </div>
 
-          {/* Approval Progress Card */}
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 flex-shrink-0 self-start">
             <div>
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
@@ -677,7 +759,6 @@ export default function TpaAdminPortal({
 
         {/* ── STAT CARDS ── */}
         <div className="grid grid-cols-3 gap-3 sm:gap-5 mb-7">
-          {/* Total */}
           <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 hover:shadow-md transition-shadow">
             <div>
               <span className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1">
@@ -691,7 +772,6 @@ export default function TpaAdminPortal({
             </div>
           </div>
 
-          {/* Pending */}
           <div className="bg-gradient-to-br from-white to-amber-50/60 p-4 sm:p-5 rounded-2xl border border-amber-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 hover:shadow-md transition-shadow">
             <div>
               <span className="text-[10px] sm:text-xs font-bold text-amber-700 uppercase tracking-widest block mb-1">
@@ -705,7 +785,6 @@ export default function TpaAdminPortal({
             </div>
           </div>
 
-          {/* ACC */}
           <div className="bg-gradient-to-br from-white to-emerald-50/60 p-4 sm:p-5 rounded-2xl border border-emerald-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 hover:shadow-md transition-shadow">
             <div>
               <span className="text-[10px] sm:text-xs font-bold text-emerald-800 uppercase tracking-widest block mb-1">
@@ -722,7 +801,6 @@ export default function TpaAdminPortal({
 
         {/* ── ACTION TOOLBAR ── */}
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-5">
-          {/* Row 1: Filter + Search */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
             {/* Status Filter Tabs */}
             <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl flex-shrink-0">
@@ -749,7 +827,7 @@ export default function TpaAdminPortal({
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Cari nama murid, orang tua, no WA, program, shift, atau ID..."
+                placeholder="Cari murid, ortu, no WA, sekolah, program, shift, alamat, catatan, atau ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-9 py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all bg-slate-50 focus:bg-white"
@@ -765,14 +843,15 @@ export default function TpaAdminPortal({
             </div>
           </div>
 
-          {/* Row 2: Export Buttons */}
+          {/* Row 2: Export & Tools */}
           <div className="flex items-center gap-2 flex-wrap border-t border-slate-100 pt-3">
             <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mr-1 hidden sm:block">
-              Ekspor:
+              Alat & Ekspor:
             </span>
             <button
               onClick={() => exportTpaToCsv(filteredData)}
-              className="flex items-center gap-1.5 bg-[#064E3B] hover:bg-[#08634b] active:scale-95 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm cursor-pointer"
+              disabled={filteredData.length === 0}
+              className="flex items-center gap-1.5 bg-[#064E3B] hover:bg-[#08634b] active:scale-95 disabled:opacity-40 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm cursor-pointer"
               title="Download format Microsoft Excel (CSV)"
             >
               <FileSpreadsheet className="w-4 h-4 text-emerald-300" />
@@ -781,7 +860,8 @@ export default function TpaAdminPortal({
 
             <button
               onClick={() => exportTpaToPdf(filteredData, filterStatus)}
-              className="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm cursor-pointer"
+              disabled={filteredData.length === 0}
+              className="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 active:scale-95 disabled:opacity-40 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm cursor-pointer"
               title="Cetak laporan PDF resmi dengan Kop Takmir MJS"
             >
               <Printer className="w-4 h-4 text-rose-200" />
@@ -790,8 +870,9 @@ export default function TpaAdminPortal({
 
             <button
               onClick={() => exportTpaToJson(registrations)}
-              className="flex items-center gap-1.5 bg-slate-700 hover:bg-slate-800 active:scale-95 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm cursor-pointer"
-              title="Cadangkan seluruh database dalam format JSON"
+              disabled={registrations.length === 0}
+              className="flex items-center gap-1.5 bg-slate-700 hover:bg-slate-800 active:scale-95 disabled:opacity-40 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm cursor-pointer"
+              title="Cadangkan database dalam format JSON"
             >
               <Download className="w-4 h-4 text-slate-300" />
               <span>Backup JSON</span>
@@ -816,6 +897,7 @@ export default function TpaAdminPortal({
 
         {/* ══════════════════════════════════════════════════════
             DESKTOP TABLE (≥ 1024px)
+            Sesuai 100% dengan Atribut Formulir Pendaftaran Murid
             ══════════════════════════════════════════════════════ */}
         <div className="hidden lg:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8">
           <div className="overflow-x-auto">
@@ -824,39 +906,67 @@ export default function TpaAdminPortal({
                 <tr className="bg-slate-50 border-b border-slate-200 text-slate-400 uppercase tracking-widest text-[10px] font-bold">
                   <th className="py-3.5 px-3 w-10 text-center">No</th>
                   <th className="py-3.5 px-4 min-w-[190px]">Calon Murid</th>
-                  <th className="py-3.5 px-4 min-w-[130px]">Usia & Sekolah</th>
+                  <th className="py-3.5 px-4 min-w-[140px]">Usia & Kelahiran</th>
+                  <th className="py-3.5 px-4 min-w-[130px]">Sekolah Asal</th>
                   <th className="py-3.5 px-4 min-w-[170px]">Program Pilihan</th>
-                  <th className="py-3.5 px-4 min-w-[150px]">Shift Belajar</th>
+                  <th className="py-3.5 px-4 min-w-[140px]">Shift Belajar</th>
                   <th className="py-3.5 px-4 min-w-[130px]">Kemampuan Ngaji</th>
-                  <th className="py-3.5 px-4 min-w-[150px]">Orang Tua / Wali</th>
+                  <th className="py-3.5 px-4 min-w-[160px]">Orang Tua / Wali</th>
                   <th className="py-3.5 px-3 text-center">Status</th>
-                  <th className="py-3.5 px-4 text-center min-w-[170px]">Aksi & Komunikasi</th>
+                  <th className="py-3.5 px-4 text-center min-w-[170px]">Aksi & Operasional</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-16 text-center">
-                      <div className="max-w-xs mx-auto">
-                        <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                          <ClipboardList className="w-8 h-8 text-slate-300" />
+                    <td colSpan={10} className="py-16 text-center">
+                      <div className="max-w-md mx-auto">
+                        <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100 shadow-sm">
+                          <ClipboardList className="w-8 h-8" />
                         </div>
-                        <p className="font-semibold text-slate-600 text-sm mb-1">
-                          {searchQuery ? "Tidak ada hasil pencarian" : "Belum ada data pendaftaran"}
-                        </p>
-                        <p className="text-xs text-slate-400 mb-3 leading-relaxed">
+                        <h4 className="font-bold text-slate-800 text-base mb-1.5">
                           {searchQuery
-                            ? `Tidak ada murid yang cocok dengan "${searchQuery}".`
-                            : "Data pendaftaran murid baru akan otomatis muncul di sini begitu formulir diisi."}
+                            ? "Tidak ada hasil pencarian"
+                            : filterStatus !== "Semua"
+                            ? `Tidak ada data dengan status "${filterStatus}"`
+                            : "Database Bersih — Belum Ada Pendaftar"}
+                        </h4>
+                        <p className="text-xs text-slate-500 mb-5 leading-relaxed">
+                          {searchQuery
+                            ? `Tidak ada data murid yang cocok dengan kata kunci "${searchQuery}".`
+                            : filterStatus !== "Semua"
+                            ? `Tidak ditemukan murid baru dengan status ${filterStatus}.`
+                            : "Semua data dummy telah dihapus. Formulir pendaftaran murid baru di website telah siap menerima data pendaftar asli secara real-time."}
                         </p>
-                        {searchQuery && (
-                          <button
-                            onClick={() => setSearchQuery("")}
-                            className="text-xs text-emerald-700 font-bold underline cursor-pointer"
-                          >
-                            Hapus Pencarian
-                          </button>
-                        )}
+                        <div className="flex items-center justify-center gap-2 flex-wrap">
+                          {searchQuery ? (
+                            <button
+                              onClick={() => setSearchQuery("")}
+                              className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl transition-all cursor-pointer"
+                            >
+                              Hapus Pencarian
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => setIsAddModalOpen(true)}
+                                className="text-xs bg-[#064E3B] hover:bg-[#08634b] text-white font-bold px-4 py-2 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-sm"
+                              >
+                                <UserPlus className="w-3.5 h-3.5 text-[#C89B3C]" />
+                                <span>+ Tambah Murid Manual</span>
+                              </button>
+                              {onNavigateToPublicTpa && (
+                                <button
+                                  onClick={onNavigateToPublicTpa}
+                                  className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                  <span>Buka Formulir Publik</span>
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -890,28 +1000,28 @@ export default function TpaAdminPortal({
                         </div>
                       </td>
 
-                      {/* Usia & Sekolah */}
+                      {/* Usia & Tempat/Tgl Lahir */}
                       <td className="py-3.5 px-4">
                         <div className="font-semibold text-slate-800">{item.usia} Tahun</div>
                         <div className="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                          {item.sekolahAsal || "—"}
+                          {item.tempatLahir ? `${item.tempatLahir}, ` : ""}
+                          {item.tanggalLahir ? formatTanggalLahir(item.tanggalLahir) : "—"}
                         </div>
-                        <div className="text-[10px] text-slate-400">{item.kelasSekolah}</div>
                       </td>
 
-                      {/* Program Pilihan (Fixed & Clear) */}
+                      {/* Sekolah Asal & Kelas */}
+                      <td className="py-3.5 px-4">
+                        <div className="font-semibold text-slate-800 text-[11px] leading-snug">
+                          {item.sekolahAsal || "—"}
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">{item.kelasSekolah}</div>
+                      </td>
+
+                      {/* Program Pilihan */}
                       <td className="py-3.5 px-4">
                         <div className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-900 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg leading-snug">
                           <BookOpen className="w-3 h-3 text-emerald-600 flex-shrink-0" />
                           <span>{item.programPilihan}</span>
-                        </div>
-                      </td>
-
-                      {/* Shift Belajar */}
-                      <td className="py-3.5 px-4">
-                        <div className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
-                          <Calendar className="w-3 h-3 text-slate-500" />
-                          <span>{item.jadwalShift?.replace(" WIB", "") || "—"}</span>
                         </div>
                       </td>
 
@@ -931,6 +1041,9 @@ export default function TpaAdminPortal({
                             ? `Ibu ${item.namaIbu}`
                             : "—"}
                         </div>
+                        {item.pekerjaanOrtu && (
+                          <div className="text-[10px] text-slate-400">{item.pekerjaanOrtu}</div>
+                        )}
                         <a
                           href={`https://wa.me/${item.whatsappOrtu.replace(
                             /\D/g,
@@ -961,10 +1074,9 @@ export default function TpaAdminPortal({
                         </span>
                       </td>
 
-                      {/* Aksi & Komunikasi */}
+                      {/* Aksi & Operasional */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                          {/* Toggle Status ACC / Pending */}
                           {item.status === "Pending" ? (
                             <button
                               onClick={() => handleStatusChange(item.id, "ACC")}
@@ -985,7 +1097,6 @@ export default function TpaAdminPortal({
                             </button>
                           )}
 
-                          {/* Tombol Kirim Pesan Resmi ACC via WhatsApp */}
                           {item.status === "ACC" && (
                             <button
                               onClick={() => handleSendAccWhatsApp(item)}
@@ -997,7 +1108,6 @@ export default function TpaAdminPortal({
                             </button>
                           )}
 
-                          {/* Detail Modal */}
                           <button
                             onClick={() => setSelectedDetail(item)}
                             className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
@@ -1006,7 +1116,6 @@ export default function TpaAdminPortal({
                             <Eye className="w-3.5 h-3.5" />
                           </button>
 
-                          {/* Hapus */}
                           <button
                             onClick={() => setDeleteTarget(item)}
                             className="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-500 transition-colors cursor-pointer"
@@ -1029,26 +1138,25 @@ export default function TpaAdminPortal({
             ══════════════════════════════════════════════════════ */}
         <div className="lg:hidden space-y-3 mb-8">
           {filteredData.length === 0 ? (
-            <div className="bg-white rounded-2xl p-10 text-center border border-slate-200">
-              <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                <ClipboardList className="w-8 h-8 text-slate-300" />
+            <div className="bg-white rounded-2xl p-8 text-center border border-slate-200">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100 shadow-sm">
+                <ClipboardList className="w-8 h-8" />
               </div>
-              <p className="font-semibold text-slate-600 text-sm mb-1">
-                {searchQuery ? "Tidak ada hasil pencarian" : "Belum ada data pendaftaran"}
+              <p className="font-bold text-slate-800 text-base mb-1">
+                {searchQuery ? "Tidak ada hasil pencarian" : "Belum Ada Pendaftar"}
               </p>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-slate-500 mb-4 leading-relaxed">
                 {searchQuery
                   ? `Tidak ada murid yang cocok dengan "${searchQuery}".`
-                  : "Data murid akan muncul begitu formulir pendaftaran dikirim."}
+                  : "Semua data dummy telah dibersihkan. Formulir pendaftaran siap menerima murid baru."}
               </p>
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="mt-3 text-xs text-emerald-700 font-bold underline cursor-pointer"
-                >
-                  Hapus Pencarian
-                </button>
-              )}
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="text-xs bg-[#064E3B] hover:bg-[#08634b] text-white font-bold px-4 py-2.5 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-sm"
+              >
+                <UserPlus className="w-3.5 h-3.5 text-[#C89B3C]" />
+                <span>+ Tambah Murid Manual</span>
+              </button>
             </div>
           ) : (
             filteredData.map((item, idx) => (
@@ -1056,7 +1164,6 @@ export default function TpaAdminPortal({
                 key={item.id}
                 className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
               >
-                {/* Card Header */}
                 <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-slate-100">
                   <div className="flex items-center gap-2">
                     <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 text-[11px] font-bold flex items-center justify-center flex-shrink-0">
@@ -1078,7 +1185,6 @@ export default function TpaAdminPortal({
                   </span>
                 </div>
 
-                {/* Card Body */}
                 <div className="px-4 py-3">
                   <div className="mb-2.5">
                     <h3 className="font-bold text-base text-slate-900 leading-tight">
@@ -1098,18 +1204,12 @@ export default function TpaAdminPortal({
                       </span>
                       <span>·</span>
                       <span>{item.usia} Tahun</span>
-                    </div>
-                  </div>
-
-                  {/* Program & Shift Highlight */}
-                  <div className="bg-emerald-50/80 border border-emerald-200 rounded-xl p-2.5 mb-2.5 text-xs">
-                    <div className="text-[10px] text-emerald-800 font-bold uppercase tracking-wider mb-0.5">
-                      Program Terpilih
-                    </div>
-                    <div className="font-bold text-emerald-950 text-xs">{item.programPilihan}</div>
-                    <div className="text-[11px] text-emerald-700 mt-0.5 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      <span>{item.jadwalShift}</span>
+                      {item.tempatLahir && (
+                        <>
+                          <span>·</span>
+                          <span>{item.tempatLahir}</span>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -1144,6 +1244,9 @@ export default function TpaAdminPortal({
                       <div className="font-semibold text-slate-800 text-xs">
                         {item.namaAyah ? `Bpk. ${item.namaAyah}` : item.namaIbu ? `Ibu ${item.namaIbu}` : "—"}
                       </div>
+                      {item.pekerjaanOrtu && (
+                        <div className="text-[10px] text-slate-400">{item.pekerjaanOrtu}</div>
+                      )}
                     </div>
                     <a
                       href={`https://wa.me/${item.whatsappOrtu.replace(
@@ -1246,7 +1349,315 @@ export default function TpaAdminPortal({
       </main>
 
       {/* ══════════════════════════════════════════════════════
+          MODAL TAMBAH PENDAFTARAN MANUAL DARI ADMIN
+          (Sesuai 100% dengan Formulir Pendaftaran Murid Baru)
+          ══════════════════════════════════════════════════════ */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-2xl shadow-2xl max-h-[92vh] overflow-y-auto border border-slate-100 sm:border-none">
+            <div className="sm:hidden flex justify-center pt-3 pb-1">
+              <div className="w-12 h-1 rounded-full bg-slate-200" />
+            </div>
+
+            <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100 sticky top-0 bg-white z-10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <UserPlus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 leading-tight">
+                    Tambah Pendaftaran Murid Baru
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Formulir resmi administrasi santri baru TPA MJS Qur'anic Tech
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddSubmit} className="p-6 space-y-6">
+              {/* Bagian 1: Data Calon Murid */}
+              <div>
+                <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-4">
+                  <span className="w-6 h-6 rounded-full bg-[#0F766E] text-white text-xs font-bold flex items-center justify-center">
+                    1
+                  </span>
+                  <h4 className="font-bold text-sm text-slate-900">Data Calon Murid</h4>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Nama Lengkap Murid <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Contoh: Muhammad Faiz Al-Fatih"
+                      value={newFormData.namaLengkap}
+                      onChange={(e) => setNewFormData({ ...newFormData, namaLengkap: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] bg-white text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Nama Panggilan
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: Faiz"
+                      value={newFormData.namaPanggilan}
+                      onChange={(e) => setNewFormData({ ...newFormData, namaPanggilan: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] bg-white text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Tempat Lahir
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: Ngawi"
+                      value={newFormData.tempatLahir}
+                      onChange={(e) => setNewFormData({ ...newFormData, tempatLahir: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] bg-white text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Tanggal Lahir
+                    </label>
+                    <input
+                      type="date"
+                      value={newFormData.tanggalLahir}
+                      onChange={(e) => setNewFormData({ ...newFormData, tanggalLahir: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] bg-white text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Jenis Kelamin
+                    </label>
+                    <select
+                      value={newFormData.jenisKelamin}
+                      onChange={(e) =>
+                        setNewFormData({
+                          ...newFormData,
+                          jenisKelamin: e.target.value as "Laki-laki" | "Perempuan",
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] bg-white text-xs"
+                    >
+                      <option value="Laki-laki">Laki-laki</option>
+                      <option value="Perempuan">Perempuan</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Usia (Tahun)
+                    </label>
+                    <input
+                      type="number"
+                      min={4}
+                      max={15}
+                      value={newFormData.usia}
+                      onChange={(e) => setNewFormData({ ...newFormData, usia: Number(e.target.value) })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] bg-white text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Sekolah Asal (TK / SD / MI)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: SDIT Al-Ihsan Ngawi"
+                      value={newFormData.sekolahAsal}
+                      onChange={(e) => setNewFormData({ ...newFormData, sekolahAsal: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] bg-white text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Kelas di Sekolah
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: Kelas 2 / TK B"
+                      value={newFormData.kelasSekolah}
+                      onChange={(e) => setNewFormData({ ...newFormData, kelasSekolah: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] bg-white text-xs"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Kemampuan Membaca Al-Qur'an Saat Ini
+                    </label>
+                    <select
+                      value={newFormData.kemampuanNgaji}
+                      onChange={(e) =>
+                        setNewFormData({
+                          ...newFormData,
+                          kemampuanNgaji: e.target.value as any,
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] bg-white text-xs"
+                    >
+                      <option value="Belum Bisa">Belum Bisa Mengenal Huruf Hijaiyah</option>
+                      <option value="Iqro Jilid 1-3">Iqro' Jilid 1 sampai 3</option>
+                      <option value="Iqro Jilid 4-6">Iqro' Jilid 4 sampai 6</option>
+                      <option value="Al-Qur'an Lancar">Sudah Masuk Al-Qur'an (Belajar Tajwid)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Pilihan Program Belajar
+                    </label>
+                    <select
+                      value={newFormData.programPilihan}
+                      onChange={(e) => setNewFormData({ ...newFormData, programPilihan: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] bg-white text-xs"
+                    >
+                      <option value="Tahsin Tajwid & Qur'anic Tech Kids">Tahsin Tajwid & Qur'anic Tech Kids</option>
+                      <option value="Tahfidz Juz 30 & Adab Digital Murid">Tahfidz Juz 30 & Adab Digital Murid</option>
+                      <option value="Qur'anic Tech & Multimedia Islami">Qur'anic Tech & Multimedia Islami</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bagian 2: Data Orang Tua / Wali */}
+              <div>
+                <div className="flex items-center gap-2 border-b border-slate-200 pb-2 mb-4">
+                  <span className="w-6 h-6 rounded-full bg-[#C89B3C] text-slate-900 text-xs font-bold flex items-center justify-center">
+                    2
+                  </span>
+                  <h4 className="font-bold text-sm text-slate-900">Data Orang Tua / Wali</h4>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Nama Ayah
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: Budi Santoso"
+                      value={newFormData.namaAyah}
+                      onChange={(e) => setNewFormData({ ...newFormData, namaAyah: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] bg-white text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Nama Ibu
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: Siti Rahmawati"
+                      value={newFormData.namaIbu}
+                      onChange={(e) => setNewFormData({ ...newFormData, namaIbu: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] bg-white text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Pekerjaan Orang Tua
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: Wiraswasta / PNS / Guru"
+                      value={newFormData.pekerjaanOrtu}
+                      onChange={(e) => setNewFormData({ ...newFormData, pekerjaanOrtu: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] bg-white text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Nomor WhatsApp Aktif Wali <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="Contoh: 081234567890"
+                      value={newFormData.whatsappOrtu}
+                      onChange={(e) => setNewFormData({ ...newFormData, whatsappOrtu: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] bg-white font-semibold text-[#0F766E] text-xs"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Alamat Lengkap Rumah
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="Jl. / RT / RW / Dusun / Desa di Ngawi"
+                      value={newFormData.alamatRumah}
+                      onChange={(e) => setNewFormData({ ...newFormData, alamatRumah: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] bg-white text-xs resize-none"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Catatan Khusus / Karakter Anak
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Misal: Senang menggambar, agak pemalu di awal, dll."
+                      value={newFormData.catatanKhusus}
+                      onChange={(e) => setNewFormData({ ...newFormData, catatanKhusus: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0F766E] bg-white text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingAdd}
+                  className="px-6 py-2.5 rounded-xl bg-[#064E3B] hover:bg-[#08634b] disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-[#064E3B]/20 cursor-pointer active:scale-95 transition-all"
+                >
+                  <Check className="w-4 h-4 text-[#C89B3C]" />
+                  <span>{isSubmittingAdd ? "Menyimpan ke Cloud..." : "Simpan Pendaftaran Murid"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════
           MODAL DETAIL LENGKAP FORMULIR MURID
+          (Menyajikan seluruh 17 atribut formulir + 4 sistem)
           ══════════════════════════════════════════════════════ */}
       {selectedDetail && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm">
@@ -1316,14 +1727,10 @@ export default function TpaAdminPortal({
                     colSpan
                   />
                   <DetailField
-                    label="Jadwal Shift"
-                    value={selectedDetail.jadwalShift || "—"}
-                    className="text-slate-800 font-semibold"
-                  />
-                  <DetailField
                     label="Kemampuan Membaca Al-Qur'an"
                     value={selectedDetail.kemampuanNgaji}
                     className="text-teal-700 font-bold"
+                    colSpan
                   />
                 </div>
               </div>
@@ -1351,7 +1758,7 @@ export default function TpaAdminPortal({
                   />
                   <DetailField label="Usia" value={`${selectedDetail.usia} Tahun`} />
                   <DetailField label="Sekolah Asal" value={selectedDetail.sekolahAsal || "—"} />
-                  <DetailField label="Kelas Sekolah" value={selectedDetail.kelasSekolah} />
+                  <DetailField label="Kelas di Sekolah" value={selectedDetail.kelasSekolah} />
                 </div>
               </div>
 
@@ -1394,7 +1801,7 @@ export default function TpaAdminPortal({
               <div className="grid grid-cols-1 gap-2.5 text-xs mb-4">
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1">
-                    <MapPin className="w-3 h-3" /> Alamat Rumah
+                    <MapPin className="w-3 h-3" /> Alamat Lengkap Rumah
                   </span>
                   <span className="font-medium text-slate-800 leading-relaxed text-[12px]">
                     {selectedDetail.alamatRumah || "—"}
@@ -1403,7 +1810,7 @@ export default function TpaAdminPortal({
                 {selectedDetail.catatanKhusus && (
                   <div className="bg-amber-50 p-3 rounded-xl border border-amber-100">
                     <span className="text-[10px] text-amber-700 font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1">
-                      <Star className="w-3 h-3" /> Catatan Khusus
+                      <Star className="w-3 h-3" /> Catatan Khusus / Karakter Anak
                     </span>
                     <span className="font-medium text-amber-900 leading-relaxed text-[12px] italic">
                       "{selectedDetail.catatanKhusus}"
@@ -1467,6 +1874,42 @@ export default function TpaAdminPortal({
       )}
 
       {/* ══════════════════════════════════════════════════════
+          MODAL RESET SELURUH DATA DUMMY
+          ══════════════════════════════════════════════════════ */}
+      {isResetConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl border border-slate-100">
+            <div className="w-14 h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
+              <Trash2 className="w-7 h-7" />
+            </div>
+
+            <div className="text-center mb-6">
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Hapus Seluruh Data Dummy?</h3>
+              <p className="text-slate-600 text-xs leading-relaxed">
+                Tindakan ini akan mengosongkan database pendaftaran murid di cloud dan memori perangkat.
+                Database akan berada dalam kondisi bersih (0 murid) siap menerima pendaftaran baru dari formulir website.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsResetConfirmOpen(false)}
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-3 rounded-xl transition-colors cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleClearAllDummy}
+                className="flex-1 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-xs py-3 rounded-xl transition-colors cursor-pointer shadow-md shadow-rose-600/20"
+              >
+                Kosongkan Database
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════
           MODAL CADANGAN & IMPORT DATABASE (RESTORE)
           ══════════════════════════════════════════════════════ */}
       {isImportModalOpen && (
@@ -1490,7 +1933,6 @@ export default function TpaAdminPortal({
             </p>
 
             <div className="space-y-4">
-              {/* Opsi 1: Unduh Backup */}
               <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between gap-3">
                 <div>
                   <div className="font-bold text-xs text-slate-800">Unduh Cadangan Lengkap</div>
@@ -1498,14 +1940,14 @@ export default function TpaAdminPortal({
                 </div>
                 <button
                   onClick={() => exportTpaToJson(registrations)}
-                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold flex items-center gap-1.5"
+                  disabled={registrations.length === 0}
+                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 disabled:opacity-40 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Download</span>
                 </button>
               </div>
 
-              {/* Opsi 2: Upload File JSON */}
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                   Pulihkan / Unggah Berkas JSON Cadangan
@@ -1520,14 +1962,13 @@ export default function TpaAdminPortal({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-2.5 px-4 border-2 border-dashed border-slate-200 hover:border-emerald-500 rounded-xl text-xs font-medium text-slate-600 hover:text-emerald-700 bg-slate-50 hover:bg-emerald-50/50 transition-all flex items-center justify-center gap-2"
+                  className="w-full py-2.5 px-4 border-2 border-dashed border-slate-200 hover:border-emerald-500 rounded-xl text-xs font-medium text-slate-600 hover:text-emerald-700 bg-slate-50 hover:bg-emerald-50/50 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Upload className="w-4 h-4 text-emerald-600" />
                   <span>Pilih File Backup (.json) dari Komputer</span>
                 </button>
               </div>
 
-              {/* Textarea Paste JSON */}
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                   Atau Tempelkan (Paste) Teks JSON Di Sini
@@ -1544,14 +1985,14 @@ export default function TpaAdminPortal({
               <div className="flex items-center gap-2 pt-2">
                 <button
                   onClick={() => setIsImportModalOpen(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   onClick={handleImportSubmit}
                   disabled={!importJsonText.trim()}
-                  className="flex-1 py-2.5 rounded-xl bg-[#064E3B] hover:bg-[#08634b] disabled:opacity-40 text-white font-bold text-xs flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 rounded-xl bg-[#064E3B] hover:bg-[#08634b] disabled:opacity-40 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Database className="w-3.5 h-3.5" />
                   <span>Pulihkan ke Database</span>
